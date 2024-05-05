@@ -40,12 +40,16 @@ func initializeModel() Model {
 		}
 		tabs = append(tabs, t)
 	}
+	h := help.New()
+	h.Styles.FullKey.UnsetForeground()
+	h.Styles.FullDesc.UnsetForeground()
+	h.Styles.FullKey.UnsetForeground()
 	return Model{
 		Tabs:    tabs,
 		context: &ctx,
 		focused: true,
 		keymap:  components.DefaultKeyMap,
-		help:    help.New(),
+		help:    h,
 	}
 }
 
@@ -190,10 +194,14 @@ func (m Model) footerView() string {
 func (m Model) View() string {
 	var body string
 	m.viewport.SetContent(m.Tabs[m.activeTab].View())
+	body = m.viewport.View()
 	if m.help.ShowAll {
-		body = m.help.View(m.keymap)
-	} else {
-		body = m.viewport.View()
+		width, _, _ := term.GetSize(int(os.Stdout.Fd()))
+		width = width / 2
+		//width := lipgloss.Height(m.footerView())
+		//width = m.viewport.Width / 2
+		vc := m.viewport.Height/2 - lipgloss.Height(m.headerView())
+		body = components.RenderHelpBox(m.help.View(m.keymap), body, width, vc, 0)
 	}
 
 	return fmt.Sprintf("%s\n%s\n%s", m.headerView(), body, m.footerView())

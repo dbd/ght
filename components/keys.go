@@ -37,15 +37,15 @@ var DefaultKeyMap = KeyMap{
 	),
 	Left: key.NewBinding(
 		key.WithKeys("h", "left"),
-		key.WithHelp("↓/j", "move left"),
+		key.WithHelp("←/h", "move left"),
 	),
 	Right: key.NewBinding(
 		key.WithKeys("l", "right"),
-		key.WithHelp("↓/j", "move right"),
+		key.WithHelp("→/l", "move right"),
 	),
 	Quit: key.NewBinding(
 		key.WithKeys("q"),
-		key.WithHelp("↓/j", "exit the application"),
+		key.WithHelp("q", "exit the application"),
 	),
 	Escape: key.NewBinding(
 		key.WithKeys("escape"),

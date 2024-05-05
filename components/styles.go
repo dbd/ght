@@ -21,13 +21,12 @@ var (
 	Yellow   = lipgloss.Color("#E5C07B")
 	Grey     = lipgloss.Color("#ABB2BF")
 	DarkGrey = lipgloss.Color("#6B717D")
+	subtle   = lipgloss.AdaptiveColor{Light: "#D9DCCF", Dark: "#383838"}
 
-	PrTitleStyle = lipgloss.NewStyle().
-			Bold(true)
-	AdditionsStyle = lipgloss.NewStyle().
-			Foreground(Green)
-	DeletionsStyle = lipgloss.NewStyle().
-			Foreground(Red)
+	PrTitleStyle        = lipgloss.NewStyle().Bold(true)
+	AdditionsStyle      = lipgloss.NewStyle().Foreground(Green)
+	DeletionsStyle      = lipgloss.NewStyle().Foreground(Red)
+	BackgroundStyle     = lipgloss.NewStyle().Foreground(DarkGrey)
 	DocStyle            = lipgloss.NewStyle().Padding(1, 2, 1, 2)
 	DiffLineNumberStyle = lipgloss.NewStyle().Foreground(DarkGrey)
 	LineColor           = Blue
@@ -121,4 +120,5 @@ var (
 	CenterAll  = lipgloss.NewStyle().Align(lipgloss.Center)
 
 	StatusHelpStyle = statusNugget.Copy().Background(lipgloss.Color("#6124DF"))
+	HelpBox         = CenterAll.Copy()
 )
