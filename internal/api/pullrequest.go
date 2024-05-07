@@ -7,11 +7,12 @@ import (
 	graphql "github.com/cli/shurcooL-graphql"
 )
 
-func GetPullRequests(query string) (prs []PullRequestResponse) {
+func GetPullRequests(query, assignee string) (prs []PullRequestResponse) {
 	client, err := api.DefaultGraphQLClient()
 	if err != nil {
 		log.Fatal(err)
 	}
+	query = query + " assignee:" + assignee
 	var queryResponse struct {
 		Search struct {
 			Nodes []struct {
@@ -35,8 +36,8 @@ func GetPullRequests(query string) (prs []PullRequestResponse) {
 
 }
 
-func GetPullRequestsCmd(query string) tea.Cmd {
+func GetPullRequestsCmd(query, assignee string) tea.Cmd {
 	return func() tea.Msg {
-		return PullRequests{Query: query, PullRequests: GetPullRequests(query)}
+		return PullRequests{Query: query, PullRequests: GetPullRequests(query, assignee)}
 	}
 }
