@@ -21,7 +21,7 @@ type Model struct {
 func (m Model) Init() tea.Cmd {
 	var cmds []tea.Cmd
 	fmt.Println("In pr search init")
-	cmds = append(cmds, api.GetPullRequestsCmd("assignee:dbd"))
+	cmds = append(cmds, api.GetPullRequestsCmd("is:pr", "@me"))
 	return tea.Batch(cmds...)
 }
 
