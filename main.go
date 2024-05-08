@@ -93,12 +93,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if !m.ready {
 			m.viewport = viewport.New(msg.Width, msg.Height-verticalMarginHeight)
 			m.viewport.YPosition = headerHeight - 1
-			m.viewport.SetContent(activeTab.Page.View())
 			m.ready = true
 			m.context.ViewportWidth = m.viewport.Width
 			m.context.ViewportHeight = m.viewport.Height
 			m.context.ViewportYOffset = m.viewport.YOffset
 			m.context.ViewportYPosition = m.viewport.YPosition
+			m.viewport.SetContent(activeTab.Page.View())
 		} else {
 			m.viewport.Width = msg.Width
 			m.viewport.Height = msg.Height - verticalMarginHeight
@@ -181,7 +181,7 @@ func (m Model) footerView() string {
 	_, _ = focused, dimensions
 	statusVal := components.StatusText.Copy().
 		Width(width - w(statusKey) - w(statusHelp)).
-		Render(dimensions)
+		Render(m.context.StatusText)
 
 	bar := lipgloss.JoinHorizontal(lipgloss.Top,
 		statusKey,

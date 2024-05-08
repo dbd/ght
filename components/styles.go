@@ -24,6 +24,8 @@ var (
 	subtle   = lipgloss.AdaptiveColor{Light: "#D9DCCF", Dark: "#383838"}
 
 	PrTitleStyle        = lipgloss.NewStyle().Bold(true)
+	TableHeader         = lipgloss.NewStyle().Bold(true)
+	TableSelected       = lipgloss.NewStyle().Bold(true).Foreground(Green)
 	AdditionsStyle      = lipgloss.NewStyle().Foreground(Green)
 	DeletionsStyle      = lipgloss.NewStyle().Foreground(Red)
 	BackgroundStyle     = lipgloss.NewStyle().Foreground(DarkGrey)
