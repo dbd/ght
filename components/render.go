@@ -18,7 +18,16 @@ func RenderBoxWithTitle(title, body string, width int) string {
 }
 
 func RenderHelpBox(body, background string, x, y, width int) string {
-	rb := BoxBorderStyle.Render(CenterAll.Render(body))
+	rb := BoxBorderStyle.Width(lipgloss.Width(body)).Render(CenterAll.Render(body))
+	offset := lipgloss.Width(rb) / 2
+
+	rbg := BackgroundStyle.Render(stripansi.Strip(background))
+	dialog := PlaceOverlay(x-offset, y, rb, rbg)
+	return dialog
+
+}
+func RenderFilter(body, background string, x, y, width int) string {
+	rb := BoxBorderStyle.Width(width).Render(CenterAll.Render(body))
 	offset := lipgloss.Width(rb) / 2
 
 	rbg := BackgroundStyle.Render(stripansi.Strip(background))

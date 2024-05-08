@@ -1,6 +1,9 @@
 package components
 
-import "github.com/dbd/ght/internal/api"
+import (
+	"github.com/charmbracelet/bubbles/help"
+	"github.com/dbd/ght/internal/api"
+)
 
 type Blur bool
 
@@ -14,4 +17,6 @@ type Context struct {
 	ViewportYOffset   int
 	ViewportYPosition int
 	StatusText        string
+	KeyMap            KeyMap
+	Help              help.Model
 }

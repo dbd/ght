@@ -26,12 +26,20 @@ type Model struct {
 	ready     bool
 	context   *components.Context
 	focused   bool
-	keymap    components.KeyMap
-	help      help.Model
+	showHelp  bool
+}
+
+var fullHelp = [][]key.Binding{
+	{components.DefaultKeyMap.Up, components.DefaultKeyMap.Down, components.DefaultKeyMap.Left, components.DefaultKeyMap.Right},
+	{components.DefaultKeyMap.Help, components.DefaultKeyMap.Quit},
 }
 
 func initializeModel() Model {
-	ctx := components.Context{}
+	h := help.New()
+	h.Styles.FullKey.UnsetForeground()
+	h.Styles.FullDesc.UnsetForeground()
+	h.Styles.FullKey.UnsetForeground()
+	ctx := components.Context{KeyMap: components.DefaultKeyMap, Help: h}
 	tabs := []tab.Model{}
 	for _, name := range []string{"Assigned"} {
 		t := tab.NewModel(&ctx, name)
@@ -40,16 +48,11 @@ func initializeModel() Model {
 		}
 		tabs = append(tabs, t)
 	}
-	h := help.New()
-	h.Styles.FullKey.UnsetForeground()
-	h.Styles.FullDesc.UnsetForeground()
-	h.Styles.FullKey.UnsetForeground()
 	return Model{
-		Tabs:    tabs,
-		context: &ctx,
-		focused: true,
-		keymap:  components.DefaultKeyMap,
-		help:    h,
+		Tabs:     tabs,
+		context:  &ctx,
+		focused:  true,
+		showHelp: false,
 	}
 }
 
@@ -111,25 +114,23 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.Tabs[m.activeTab] = activeTab
 		}
 	case tea.KeyMsg:
-		switch {
-		case key.Matches(msg, m.keymap.Help):
-			m.help.ShowAll = !m.help.ShowAll
-		}
 		if !m.focused {
 			activeTab, cmd := activeTab.Update(msg)
 			cmds = append(cmds, cmd)
 			m.Tabs[m.activeTab] = activeTab
 		} else {
 			switch {
-			case key.Matches(msg, components.DefaultKeyMap.Down):
+			case key.Matches(msg, m.context.KeyMap.Help):
+				m.showHelp = !m.showHelp
+			case key.Matches(msg, m.context.KeyMap.Down):
 				m.focused = false
-			case key.Matches(msg, components.DefaultKeyMap.Quit):
+			case key.Matches(msg, m.context.KeyMap.Quit):
 				return m, tea.Quit
-			case key.Matches(msg, components.DefaultKeyMap.Left):
+			case key.Matches(msg, m.context.KeyMap.Left):
 				if m.activeTab > 0 {
 					m.activeTab--
 				}
-			case key.Matches(msg, components.DefaultKeyMap.Right):
+			case key.Matches(msg, m.context.KeyMap.Right):
 				if m.activeTab < len(m.Tabs)-1 {
 					m.activeTab++
 				}
@@ -195,13 +196,14 @@ func (m Model) View() string {
 	var body string
 	m.viewport.SetContent(m.Tabs[m.activeTab].View())
 	body = m.viewport.View()
-	if m.help.ShowAll {
+	if m.showHelp {
 		width, _, _ := term.GetSize(int(os.Stdout.Fd()))
 		width = width / 2
 		//width := lipgloss.Height(m.footerView())
 		//width = m.viewport.Width / 2
 		vc := m.viewport.Height/2 - lipgloss.Height(m.headerView())
-		body = components.RenderHelpBox(m.help.View(m.keymap), body, width, vc, 0)
+
+		body = components.RenderHelpBox(m.context.Help.FullHelpView(fullHelp), body, width, vc, 0)
 	}
 
 	return fmt.Sprintf("%s\n%s\n%s", m.headerView(), body, m.footerView())

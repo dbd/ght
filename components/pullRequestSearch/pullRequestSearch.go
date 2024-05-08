@@ -8,6 +8,7 @@ import (
 
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/table"
+	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/dbd/ght/components"
@@ -19,8 +20,16 @@ type Model struct {
 	Context      *components.Context
 	PullRequests []api.PullRequestResponse
 	Focused      bool
+	showHelp     bool
 	table        table.Model
 	query        string
+	filter       textinput.Model
+	allRows      []table.Row
+}
+
+var fullHelp = [][]key.Binding{
+	{components.DefaultKeyMap.Up, components.DefaultKeyMap.Down, components.DefaultKeyMap.Enter},
+	{components.DefaultKeyMap.Filter, components.DefaultKeyMap.Quit},
 }
 
 func (m Model) Init() tea.Cmd {
@@ -34,7 +43,8 @@ func NewModel(prs []api.PullRequestResponse, query string, ctx *components.Conte
 	t := newEmptyTable(prs, ctx)
 	ts := table.Styles{Header: components.TableHeader, Selected: components.TableSelected}
 	t.SetStyles(ts)
-	return Model{Context: ctx, table: t, query: query}
+	m := Model{Context: ctx, table: t, query: query, filter: textinput.New()}
+	return m
 }
 
 func getColumns(maxWidth int) []table.Column {
@@ -75,19 +85,39 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			rows = append(rows, table.Row{"1", pr.Repository.Name, strconv.FormatInt(pr.Number, 10), pr.Author.Login, "false", pr.Title})
 		}
 		m.table.SetRows(rows)
+		m.allRows = rows
 	case tea.KeyMsg:
+		if m.filter.Focused() {
+			filter, cmd := m.filter.Update(msg)
+			cmds = append(cmds, cmd)
+			m.filter = filter
+			if key.Matches(msg, m.Context.KeyMap.Enter) {
+				m.filter.Blur()
+				m.table.SetRows(m.filteredRows())
+				break
+			}
+			break
+		}
 		switch {
-		case key.Matches(msg, components.DefaultKeyMap.Quit):
+		case key.Matches(msg, m.Context.KeyMap.Enter):
+			cmds = append(cmds, m.openPR(m.table.SelectedRow()))
+		case key.Matches(msg, m.Context.KeyMap.Help):
+			m.showHelp = !m.showHelp
+		case key.Matches(msg, m.Context.KeyMap.Filter):
+			m.filter.Focus()
+		case key.Matches(msg, m.Context.KeyMap.Quit):
 			return m, tea.Quit
-		case key.Matches(msg, components.DefaultKeyMap.Escape):
+		case key.Matches(msg, m.Context.KeyMap.Escape):
 			if m.table.Focused() {
 				m.table.Blur()
 			} else {
 				m.table.Focus()
 			}
-		case key.Matches(msg, components.DefaultKeyMap.Enter):
-			cmds = append(cmds, m.openPR(m.table.SelectedRow()))
-		case key.Matches(msg, components.DefaultKeyMap.Up):
+		case key.Matches(msg, m.Context.KeyMap.Up):
+			if m.table.Cursor() == 0 {
+				cmds = append(cmds, m.Blur)
+			}
+		case key.Matches(msg, m.Context.KeyMap.Up):
 			if m.table.Cursor() == 0 {
 				cmds = append(cmds, m.Blur)
 			}
@@ -109,7 +139,22 @@ func (m Model) View() string {
 	doc := strings.Builder{}
 	doc.WriteString(components.BoxBorderStyle.Width(m.Context.ViewportWidth-2).Align(lipgloss.Left).Render(m.query) + "\n")
 	doc.WriteString(m.table.View())
-	return doc.String()
+	body := doc.String()
+	if m.showHelp {
+		width, _, _ := term.GetSize(int(os.Stdout.Fd()))
+		width = width / 2
+		vc := m.Context.ViewportHeight / 2
+
+		body = components.RenderHelpBox(m.Context.Help.FullHelpView(fullHelp), body, width, vc, 0)
+	}
+	if m.filter.Focused() {
+		width, _, _ := term.GetSize(int(os.Stdout.Fd()))
+		width = width / 2
+		vc := m.Context.ViewportHeight / 2
+		body = components.RenderFilter(m.filter.View(), body, width, vc, width/2)
+
+	}
+	return body
 }
 
 func (m Model) Blur() tea.Msg {
@@ -131,4 +176,18 @@ func (m Model) openPR(row table.Row) tea.Cmd {
 	return func() tea.Msg {
 		return components.OpenPR{PR: pr}
 	}
+}
+
+func (m Model) filteredRows() []table.Row {
+	var rows []table.Row
+	if m.filter.Value() != "" {
+		for _, row := range m.allRows {
+			if strings.Contains(fmt.Sprintf("%v", row), m.filter.Value()) {
+				rows = append(rows, row)
+			}
+		}
+	} else {
+		rows = m.allRows
+	}
+	return rows
 }
