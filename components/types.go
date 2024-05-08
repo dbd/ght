@@ -13,4 +13,5 @@ type Context struct {
 	ViewportHeight    int
 	ViewportYOffset   int
 	ViewportYPosition int
+	StatusText        string
 }
