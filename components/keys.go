@@ -13,6 +13,7 @@ type KeyMap struct {
 	Escape key.Binding
 	Enter  key.Binding
 	Help   key.Binding
+	Filter key.Binding
 }
 
 func (k KeyMap) ShortHelp() []key.Binding {
@@ -58,5 +59,9 @@ var DefaultKeyMap = KeyMap{
 	Help: key.NewBinding(
 		key.WithKeys("?"),
 		key.WithHelp("?", "toggle help"),
+	),
+	Filter: key.NewBinding(
+		key.WithKeys("/"),
+		key.WithHelp("/", "filter"),
 	),
 }
