@@ -39,7 +39,8 @@ var (
 				BorderForeground(Blue).
 				Padding(0, 1)
 	// Set a rounded, yellow-on-purple border to the top and left
-	BoxBorderStyle = InactiveTabStyle.Copy().BorderStyle(boxBorder)
+	//BoxBorderStyle = InactiveTabStyle.Copy().BorderStyle(boxBorder)
+	BoxBorderStyle = InactiveTabStyle.Copy().Padding(0, 0).BorderStyle(boxBorder)
 	boxBorder      = lipgloss.Border{
 		Top:         "─",
 		Bottom:      "─",

@@ -36,7 +36,7 @@ func initializeModel() Model {
 	for _, name := range []string{"Assigned"} {
 		t := tab.NewModel(&ctx, name)
 		if name == "Assigned" {
-			t.Page = pullRequestSearch.NewModel([]api.PullRequestResponse{}, &ctx)
+			t.Page = pullRequestSearch.NewModel([]api.PullRequestResponse{}, "is:pr assignee:@me", &ctx)
 		}
 		tabs = append(tabs, t)
 	}
@@ -166,7 +166,7 @@ func (m Model) headerView() string {
 	)
 	gap := components.TabGap.Render(strings.Repeat(" ", max(0, width-lipgloss.Width(row)-2)))
 	row = lipgloss.JoinHorizontal(lipgloss.Bottom, row, gap)
-	doc.WriteString(row + "\n")
+	doc.WriteString(row)
 	return doc.String()
 }
 func (m Model) footerView() string {
