@@ -22,17 +22,6 @@ func RenderHelpBox(body, background string, x, y, width int) string {
 	offset := lipgloss.Width(rb) / 2
 
 	rbg := BackgroundStyle.Render(stripansi.Strip(background))
-	// dialog := lipgloss.Place(width, 40,
-	// 	lipgloss.Center, lipgloss.Center,
-	// 	rb,
-	// 	lipgloss.WithWhitespaceChars(background),
-	// 	lipgloss.WithWhitespaceForeground(subtle),
-	// )
-	//dialog := lipgloss.PlaceHorizontal(800, 400,
-	//	rb,
-	//	lipgloss.WithWhitespaceChars(background),
-	//	lipgloss.WithWhitespaceForeground(subtle),
-	//)
 	dialog := PlaceOverlay(x-offset, y, rb, rbg)
 	return dialog
 

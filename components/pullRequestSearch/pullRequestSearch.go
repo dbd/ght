@@ -3,10 +3,12 @@ package pullRequestSearch
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/table"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/dbd/ght/components"
 	"github.com/dbd/ght/internal/api"
 )
@@ -16,6 +18,7 @@ type Model struct {
 	PullRequests []api.PullRequestResponse
 	Focused      bool
 	table        table.Model
+	query        string
 }
 
 func (m Model) Init() tea.Cmd {
@@ -25,9 +28,9 @@ func (m Model) Init() tea.Cmd {
 	return tea.Batch(cmds...)
 }
 
-func NewModel(prs []api.PullRequestResponse, ctx *components.Context) Model {
+func NewModel(prs []api.PullRequestResponse, query string, ctx *components.Context) Model {
 	table := newEmptyTable(prs, ctx)
-	return Model{Context: ctx, table: table}
+	return Model{Context: ctx, table: table, query: query}
 }
 
 func newEmptyTable(prs []api.PullRequestResponse, ctx *components.Context) table.Model {
@@ -83,7 +86,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m Model) View() string {
-	return m.table.View()
+	doc := strings.Builder{}
+	doc.WriteString(components.BoxBorderStyle.Width(m.Context.ViewportWidth-2).Align(lipgloss.Left).Render(m.query) + "\n")
+	doc.WriteString(m.table.View())
+	return doc.String()
 }
 
 func (m Model) Blur() tea.Msg {
