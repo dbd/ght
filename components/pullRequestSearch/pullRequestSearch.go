@@ -49,7 +49,7 @@ func NewModel(prs []api.PullRequestResponse, query string, ctx *components.Conte
 
 func getColumns(maxWidth int) []table.Column {
 	columns := []table.Column{
-		{Title: "Age", Width: 5},
+		{Title: "Age", Width: 10},
 		{Title: "Repo", Width: 10},
 		{Title: "Number", Width: 8},
 		{Title: "Author", Width: 20},
@@ -82,7 +82,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.PullRequests = msg.PullRequests
 		var rows []table.Row
 		for _, pr := range m.PullRequests {
-			rows = append(rows, table.Row{"1", pr.Repository.Name, strconv.FormatInt(pr.Number, 10), pr.Author.Login, "false", pr.Title})
+			rows = append(rows, table.Row{pr.CreatedAt.ShortSince(), pr.Repository.Name, strconv.FormatInt(pr.Number, 10), pr.Author.Login, "false", pr.Title})
 		}
 		m.table.SetRows(rows)
 		m.allRows = rows

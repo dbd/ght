@@ -1,5 +1,11 @@
 package api
 
+import (
+	"fmt"
+	"strconv"
+	"time"
+)
+
 type PullRequests struct {
 	Query        string
 	PullRequests []PullRequestResponse
@@ -11,6 +17,7 @@ type PullRequestResponse struct {
 	Author             Actor
 	Title              string
 	Body               string
+	CreatedAt          TimeStamp
 	Repository         Repository
 	Number             int64
 	Additions          int64
@@ -37,7 +44,7 @@ type Reviews struct {
 type Review struct {
 	Author    Actor
 	Body      string
-	CreatedAt string
+	CreatedAt TimeStamp
 	State     string
 }
 type Labels struct {
@@ -62,7 +69,7 @@ type IssueComments struct {
 type IssueComment struct {
 	Author    Actor
 	Body      string
-	CreatedAt string
+	CreatedAt TimeStamp
 	UpdatedAt string
 }
 type PullRequestCommits struct {
@@ -132,4 +139,19 @@ func (c ReviewThreads) getPRCommentsMap() map[string]map[string]map[LineRange][]
 		res[rt.Path][rt.DiffSide][lr] = rt.Comments.Nodes
 	}
 	return res
+}
+
+type TimeStamp string
+
+func (t TimeStamp) ShortSince() (s string) {
+	layout := "2006-01-02T15:04:05Z"
+	ts, _ := time.Parse(layout, string(t))
+	now := time.Now()
+	d := now.Sub(ts)
+	if d.Hours() > 23 {
+		s = fmt.Sprintf("%s days", strconv.FormatFloat(d.Hours()/24, 'f', 0, 64))
+	} else {
+		s = fmt.Sprintf("%s hours", strconv.FormatFloat(d.Hours(), 'f', 0, 64))
+	}
+	return s
 }
