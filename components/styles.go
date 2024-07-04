@@ -2,14 +2,6 @@ package components
 
 import "github.com/charmbracelet/lipgloss"
 
-func tabBorderWithBottom(left, middle, right string) lipgloss.Border {
-	border := lipgloss.RoundedBorder()
-	border.BottomLeft = left
-	border.Bottom = middle
-	border.BottomRight = right
-	return border
-}
-
 var (
 	// Palette
 	Black    = lipgloss.Color("#282C34")
@@ -32,6 +24,8 @@ var (
 	DocStyle            = lipgloss.NewStyle().Padding(1, 2, 1, 2)
 	DiffLineNumberStyle = lipgloss.NewStyle().Foreground(DarkGrey)
 	LineColor           = Blue
+	LineStyle           = lipgloss.NewStyle().Foreground(Blue).Padding(0, 0)
+	BoldStyle           = lipgloss.NewStyle().Bold(true)
 	InactiveTabStyle    = lipgloss.NewStyle().Border(InactiveTabBorder, true).BorderForeground(Blue).Padding(0, 1)
 	ActiveTabStyle      = InactiveTabStyle.Copy().Border(ActiveTabBorder, true).Bold(true)
 	ActiveTabBlurStyle  = ActiveTabStyle.Copy().Bold(false)
@@ -73,6 +67,17 @@ var (
 		TopLeft:     "│",
 		TopRight:    "│",
 		BottomLeft:  "╰",
+		BottomRight: "╯",
+	}
+	BoxBodyBorderCornerStyle = InactiveTabStyle.Copy().BorderStyle(boxBodyBorderCorner)
+	boxBodyBorderCorner      = lipgloss.Border{
+		Top:         " ",
+		Bottom:      "─",
+		Left:        "│",
+		Right:       "│",
+		TopLeft:     "│",
+		TopRight:    "│",
+		BottomLeft:  "├",
 		BottomRight: "╯",
 	}
 	ActiveTabBorder = lipgloss.Border{

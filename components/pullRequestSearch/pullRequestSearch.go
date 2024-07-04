@@ -27,6 +27,10 @@ type Model struct {
 	allRows      []table.Row
 }
 
+type OpenPR struct {
+	PR api.PullRequestResponse
+}
+
 var fullHelp = [][]key.Binding{
 	{components.DefaultKeyMap.Up, components.DefaultKeyMap.Down, components.DefaultKeyMap.Enter},
 	{components.DefaultKeyMap.Filter, components.DefaultKeyMap.Quit},
@@ -174,7 +178,7 @@ func (m Model) openPR(row table.Row) tea.Cmd {
 
 	}
 	return func() tea.Msg {
-		return components.OpenPR{PR: pr}
+		return OpenPR{PR: pr}
 	}
 }
 

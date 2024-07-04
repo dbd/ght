@@ -104,3 +104,28 @@ func ParseDiffText(diff string) []File {
 	}
 	return files
 }
+
+func ParseHunkDiff(hunk string) Hunk {
+	hunkRegex := regexp.MustCompile(`@@ -(\d+),(\d+) \+(\d+),(\d+) @@`)
+	hunkLocs := hunkRegex.FindAllStringSubmatch(hunk, -1)
+	hunks := hunkRegex.Split(hunk, -1)
+	h := Hunk{}
+	for i, hunkLoc := range hunkLocs {
+		var m = []int64{}
+		for i := 1; i <= 4; i++ {
+			j, err := strconv.ParseInt(string(hunkLoc[i]), 10, 64)
+			if err != nil {
+				log.Fatal(err)
+			}
+			m = append(m, j)
+		}
+		h.LeftStart = m[0]
+		h.LeftCount = m[1]
+		h.RightStart = m[2]
+		h.RightCount = m[3]
+		h.lines = strings.Split(hunks[i+1], "\n")[1:]
+		h.populateLines()
+		return h
+	}
+	return h
+}
