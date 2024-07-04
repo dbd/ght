@@ -3,6 +3,7 @@ package pullRequestDetail
 import (
 	"fmt"
 	"log"
+	"os"
 	"strconv"
 	"strings"
 
@@ -16,6 +17,7 @@ import (
 	"github.com/dbd/ght/components"
 	"github.com/dbd/ght/internal/api"
 	"github.com/dbd/ght/utils"
+	"golang.org/x/term"
 )
 
 type Model struct {
@@ -26,7 +28,19 @@ type Model struct {
 	showComments bool
 	paginator    paginator.Model
 	diff         string
+	showHelp     bool
 }
+
+var (
+	showComments = key.NewBinding(
+		key.WithKeys("c"),
+		key.WithHelp("c", "show comments"))
+
+	fullHelp = [][]key.Binding{
+		{components.DefaultKeyMap.Up, components.DefaultKeyMap.Down, components.DefaultKeyMap.Enter},
+		{showComments, components.DefaultKeyMap.Quit},
+	}
+)
 
 func (m Model) Init() tea.Cmd {
 	return nil
@@ -65,21 +79,25 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	m.viewport.Height = m.Context.ViewportHeight - 1
 	p, pCmd := m.paginator.Update(msg)
 	m.paginator = p
-	if m.paginator.Page == 0 {
-		m.viewport.SetContent(RenderPullRequestDetail(m.PullRequest, m.Context.ViewportWidth-2))
-	} else {
-		m.viewport.SetContent(m.RenderPullDiff())
-	}
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch {
 		case key.Matches(msg, components.DefaultKeyMap.Quit):
 			cmds = append(cmds, m.Blur)
+		case key.Matches(msg, m.Context.KeyMap.Help):
+			m.showHelp = !m.showHelp
+		case key.Matches(msg, showComments):
+			m.showComments = !m.showComments
 		case key.Matches(msg, components.DefaultKeyMap.Up):
 			if m.viewport.AtTop() {
 				cmds = append(cmds, m.Blur)
 			}
 		}
+	}
+	if m.paginator.Page == 0 {
+		m.viewport.SetContent(RenderPullRequestDetail(m.PullRequest, m.Context.ViewportWidth-2))
+	} else {
+		m.viewport.SetContent(m.RenderPullDiff())
 	}
 	v, vCmd := m.viewport.Update(msg)
 	m.viewport = v
@@ -92,7 +110,15 @@ func (m Model) View() string {
 	doc.WriteString(components.CenterAll.Copy().Width(m.Context.ViewportWidth - 2).Render(m.paginator.View()))
 	doc.WriteString("\n")
 	doc.WriteString(m.viewport.View())
-	return doc.String()
+	body := doc.String()
+	if m.showHelp {
+		width, _, _ := term.GetSize(int(os.Stdout.Fd()))
+		width = width / 2
+		vc := m.Context.ViewportHeight / 2
+
+		body = components.RenderHelpBox(m.Context.Help.FullHelpView(fullHelp), body, width, vc, 0)
+	}
+	return body
 }
 
 func (m Model) RenderPullDiff() string {
@@ -155,16 +181,8 @@ func RenderPullRequestDetail(pr api.PullRequestResponse, width int) string {
 	if err != nil {
 		body = "ERROR"
 	}
-	doc.WriteString(components.RenderBoxWithTitle(pr.Author.Login, body, width) + "\n")
-	doc.WriteString(renderComments(pr, width) + "\n")
-	return doc.String()
-}
-
-func renderComments(pr api.PullRequestResponse, width int) string {
-	doc := strings.Builder{}
-	for _, comment := range pr.Comments.Nodes {
-		doc.WriteString(components.RenderBoxWithTitle(comment.Author.Login+"+"+strconv.FormatInt(int64(width), 10), comment.Body, width))
-	}
+	doc.WriteString(components.RenderBoxWithTitleCorner(pr.Author.Login, body, width, false, true) + "\n")
+	doc.WriteString(renderTimeline(pr, width))
 	return doc.String()
 }
 
