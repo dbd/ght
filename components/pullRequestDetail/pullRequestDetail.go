@@ -173,10 +173,7 @@ func (m Model) RenderPullDiff() string {
 }
 func RenderPullRequestDetail(pr api.PullRequestResponse, width int) string {
 	doc := strings.Builder{}
-	ad := components.AdditionsStyle.Render("+"+strconv.FormatInt(pr.Additions, 10)) + " · " + components.DeletionsStyle.Render("-"+strconv.FormatInt(pr.Deletions, 10))
-	doc.WriteString(components.PrTitleStyle.Render(pr.Title) + "\n")
-	doc.WriteString(pr.Author.Login + " · " + pr.BaseRefName + " ← " + pr.HeadRefName + "\n")
-	doc.WriteString(strconv.FormatInt(pr.Number, 10) + " · " + pr.Repository.NameWithOwner + " | " + ad + "\n")
+	doc.WriteString(formatHeader(pr))
 	body, err := glamour.Render(pr.Body, "dark")
 	if err != nil {
 		body = "ERROR"

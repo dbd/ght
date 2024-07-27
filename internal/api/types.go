@@ -32,6 +32,7 @@ type PullRequestResponse struct {
 	ReviewThreads      ReviewThreads      `graphql:"reviewThreads(first: 10)"`
 	Labels             Labels             `graphql:"labels(first: 10)"`
 	Reviews            Reviews            `graphql:"reviews(first: 10)"`
+	ReviewRequests     ReviewRequests     `graphql:"reviewRequests(first: 10)"`
 	TimelineItems      TimelineItems      `graphql:"timelineItems(first: 30)"`
 }
 
@@ -113,6 +114,13 @@ type Mannequin struct {
 
 type Team struct {
 	Name string
+}
+
+type ReviewRequests struct {
+	Nodes []ReviewRequest
+}
+type ReviewRequest struct {
+	RequestedReviewer RequestedReviewer
 }
 
 type RequestedReviewer struct {
