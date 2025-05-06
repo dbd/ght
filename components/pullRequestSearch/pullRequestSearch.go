@@ -33,7 +33,7 @@ type OpenPR struct {
 
 var fullHelp = [][]key.Binding{
 	{components.DefaultKeyMap.Up, components.DefaultKeyMap.Down, components.DefaultKeyMap.Enter},
-	{components.DefaultKeyMap.Filter, components.DefaultKeyMap.Quit},
+	{components.DefaultKeyMap.Filter, components.DefaultKeyMap.Close, components.DefaultKeyMap.Exit},
 }
 
 func (m Model) Init() tea.Cmd {
@@ -109,9 +109,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.showHelp = !m.showHelp
 		case key.Matches(msg, m.Context.KeyMap.Filter):
 			m.filter.Focus()
-		case key.Matches(msg, m.Context.KeyMap.Quit):
+		case key.Matches(msg, m.Context.KeyMap.Exit):
 			return m, tea.Quit
-		case key.Matches(msg, m.Context.KeyMap.Escape):
+		case key.Matches(msg, m.Context.KeyMap.Close):
 			if m.table.Focused() {
 				m.table.Blur()
 			} else {

@@ -38,7 +38,7 @@ var (
 
 	fullHelp = [][]key.Binding{
 		{components.DefaultKeyMap.Up, components.DefaultKeyMap.Down, components.DefaultKeyMap.Enter},
-		{showComments, components.DefaultKeyMap.Quit},
+		{components.DefaultKeyMap.Filter, components.DefaultKeyMap.Close, components.DefaultKeyMap.Exit},
 	}
 )
 
@@ -82,7 +82,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch {
-		case key.Matches(msg, components.DefaultKeyMap.Quit):
+		case key.Matches(msg, components.DefaultKeyMap.Close):
 			cmds = append(cmds, m.Blur)
 		case key.Matches(msg, m.Context.KeyMap.Help):
 			m.showHelp = !m.showHelp
