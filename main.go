@@ -31,7 +31,7 @@ type Model struct {
 
 var fullHelp = [][]key.Binding{
 	{components.DefaultKeyMap.Up, components.DefaultKeyMap.Down, components.DefaultKeyMap.Left, components.DefaultKeyMap.Right},
-	{components.DefaultKeyMap.Help, components.DefaultKeyMap.Quit},
+	{components.DefaultKeyMap.Help, components.DefaultKeyMap.Close, components.DefaultKeyMap.Exit},
 }
 
 func initializeModel() Model {
@@ -124,8 +124,25 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.showHelp = !m.showHelp
 			case key.Matches(msg, m.context.KeyMap.Down):
 				m.focused = false
-			case key.Matches(msg, m.context.KeyMap.Quit):
+			case key.Matches(msg, m.context.KeyMap.Exit):
 				return m, tea.Quit
+			case key.Matches(msg, m.context.KeyMap.Close):
+				var tt []tab.Model
+				for counter, tab := range m.Tabs {
+					if counter != m.activeTab {
+						tt = append(tt, tab)
+					}
+				}
+				if len(tt) == 0 {
+					m.context.StatusText = "Unable to close last tab. Exit instead."
+					break
+				}
+				m.Tabs = tt
+				if m.activeTab < len(m.Tabs)-1 {
+					m.activeTab++
+				} else {
+					m.activeTab--
+				}
 			case key.Matches(msg, m.context.KeyMap.Left):
 				if m.activeTab > 0 {
 					m.activeTab--
@@ -134,7 +151,6 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				if m.activeTab < len(m.Tabs)-1 {
 					m.activeTab++
 				}
-
 			}
 		}
 	default:

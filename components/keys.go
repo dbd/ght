@@ -9,21 +9,21 @@ type KeyMap struct {
 	Down   key.Binding
 	Left   key.Binding
 	Right  key.Binding
-	Quit   key.Binding
-	Escape key.Binding
+	Close  key.Binding
+	Exit   key.Binding
 	Enter  key.Binding
 	Help   key.Binding
 	Filter key.Binding
 }
 
 func (k KeyMap) ShortHelp() []key.Binding {
-	return []key.Binding{k.Help, k.Quit}
+	return []key.Binding{k.Help, k.Exit}
 }
 
 func (k KeyMap) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
 		{k.Up, k.Down, k.Left, k.Right}, // first column
-		{k.Help, k.Quit},                // second column
+		{k.Help, k.Close, k.Exit},       // second column
 	}
 }
 
@@ -44,13 +44,13 @@ var DefaultKeyMap = KeyMap{
 		key.WithKeys("l", "right"),
 		key.WithHelp("→/l", "move right"),
 	),
-	Quit: key.NewBinding(
-		key.WithKeys("q"),
-		key.WithHelp("q", "exit the application"),
+	Close: key.NewBinding(
+		key.WithKeys("q", "ctrl+w"),
+		key.WithHelp("q/^w", "close the highlighted tab"),
 	),
-	Escape: key.NewBinding(
-		key.WithKeys("escape"),
-		key.WithHelp("ESC", "exit the application"),
+	Exit: key.NewBinding(
+		key.WithKeys("escape", "ctrl+c"),
+		key.WithHelp("ESC/^c", "exit the application"),
 	),
 	Enter: key.NewBinding(
 		key.WithKeys("enter"),
