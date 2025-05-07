@@ -42,18 +42,31 @@ func initializeModel() Model {
 	h.Styles.FullDesc.UnsetForeground()
 	h.Styles.FullKey.UnsetForeground()
 	ctx := components.Context{KeyMap: components.DefaultKeyMap, Help: h}
+	m := Model{
+		config:   config,
+		context:  &ctx,
+		focused:  true,
+		showHelp: false,
+	}
+	headerHeight := lipgloss.Height(m.headerView())
+	footerHeight := lipgloss.Height(m.footerView())
+	verticalMarginHeight := headerHeight + footerHeight
+
+	mw, mh, _ := term.GetSize(int(os.Stdout.Fd()))
+	m.viewport = viewport.New(mw, mh-verticalMarginHeight)
+	m.viewport.YPosition = headerHeight - 1
+	m.context.ViewportWidth = m.viewport.Width
+	m.context.ViewportHeight = m.viewport.Height
+	m.context.ViewportYOffset = m.viewport.YOffset
+	m.context.ViewportYPosition = m.viewport.YPosition
 	tabs := []tab.Model{}
 	for _, search := range config.Pr.Searches {
 		t := tab.NewModel(&ctx, search.Name)
 		t.Page = pullRequestSearch.NewModel([]api.PullRequestResponse{}, search.Query, &ctx)
 		tabs = append(tabs, t)
 	}
-	return Model{
-		Tabs:     tabs,
-		context:  &ctx,
-		focused:  true,
-		showHelp: false,
-	}
+	m.Tabs = tabs
+	return m
 }
 
 func (m Model) Init() tea.Cmd {
@@ -217,10 +230,7 @@ func (m Model) View() string {
 	if m.showHelp {
 		width, _, _ := term.GetSize(int(os.Stdout.Fd()))
 		width = width / 2
-		//width := lipgloss.Height(m.footerView())
-		//width = m.viewport.Width / 2
 		vc := m.viewport.Height/2 - lipgloss.Height(m.headerView())
-
 		body = components.RenderHelpBox(m.context.Help.FullHelpView(fullHelp), body, width, vc, 0)
 	}
 

@@ -38,6 +38,7 @@ var fullHelp = [][]key.Binding{
 
 func (m Model) Init() tea.Cmd {
 	var cmds []tea.Cmd
+	m.table.SetHeight(m.Context.ViewportHeight)
 	cmds = append(cmds, api.GetPullRequestsCmd(m.query))
 	return tea.Batch(cmds...)
 }
@@ -83,14 +84,19 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.Context.StatusText = fmt.Sprintf("%+v", m.Context.ViewportHeight)
 		m.table.SetHeight(m.Context.ViewportHeight)
+		t, cmd := m.table.Update(msg)
+		m.table = t
+		cmds = append(cmds, cmd)
 	case api.PullRequests:
-		m.PullRequests = msg.PullRequests
-		var rows []table.Row
-		for _, pr := range m.PullRequests {
-			rows = append(rows, table.Row{pr.CreatedAt.ShortSince(), pr.Repository.Name, strconv.FormatInt(pr.Number, 10), pr.Author.Login, "false", pr.Title})
+		if msg.Query == m.query {
+			m.PullRequests = msg.PullRequests
+			var rows []table.Row
+			for _, pr := range m.PullRequests {
+				rows = append(rows, table.Row{pr.CreatedAt.ShortSince(), pr.Repository.Name, strconv.FormatInt(pr.Number, 10), pr.Author.Login, "false", pr.Title})
+			}
+			m.table.SetRows(rows)
+			m.allRows = rows
 		}
-		m.table.SetRows(rows)
-		m.allRows = rows
 	case tea.KeyMsg:
 		if m.filter.Focused() {
 			filter, cmd := m.filter.Update(msg)
