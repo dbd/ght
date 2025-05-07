@@ -103,9 +103,13 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 	default:
-		activeTab, cmd := activeTab.Update(msg)
-		cmds = append(cmds, cmd)
-		m.Tabs[m.activeTab] = activeTab
+		tabs := []tab.Model{}
+		for _, tab := range m.Tabs {
+			tab, cmd := tab.Update(msg)
+			cmds = append(cmds, cmd)
+			tabs = append(tabs, tab)
+		}
+		m.Tabs = tabs
 	}
 	return m, tea.Batch(cmds...)
 }

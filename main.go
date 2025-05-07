@@ -73,6 +73,7 @@ func (m Model) Init() tea.Cmd {
 	}
 	return tea.Batch(cmds...)
 }
+
 func main() {
 	p := tea.NewProgram(initializeModel(), tea.WithAltScreen())
 	if _, err := p.Run(); err != nil {
