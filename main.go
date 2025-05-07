@@ -155,7 +155,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.Tabs = tt
 				if m.activeTab < len(m.Tabs)-1 {
 					m.activeTab++
-				} else {
+				} else if m.activeTab != 0 {
 					m.activeTab--
 				}
 			case key.Matches(msg, m.context.KeyMap.Left):
