@@ -22,6 +22,7 @@ import (
 type Model struct {
 	Tabs      []tab.Model
 	activeTab int
+	config    components.Config
 	viewport  viewport.Model
 	ready     bool
 	context   *components.Context
@@ -35,17 +36,16 @@ var fullHelp = [][]key.Binding{
 }
 
 func initializeModel() Model {
+	config := components.SetupConfig()
 	h := help.New()
 	h.Styles.FullKey.UnsetForeground()
 	h.Styles.FullDesc.UnsetForeground()
 	h.Styles.FullKey.UnsetForeground()
 	ctx := components.Context{KeyMap: components.DefaultKeyMap, Help: h}
 	tabs := []tab.Model{}
-	for _, name := range []string{"Assigned"} {
-		t := tab.NewModel(&ctx, name)
-		if name == "Assigned" {
-			t.Page = pullRequestSearch.NewModel([]api.PullRequestResponse{}, "is:pr assignee:@me", &ctx)
-		}
+	for _, search := range config.Pr.Searches {
+		t := tab.NewModel(&ctx, search.Name)
+		t.Page = pullRequestSearch.NewModel([]api.PullRequestResponse{}, search.Query, &ctx)
 		tabs = append(tabs, t)
 	}
 	return Model{
@@ -96,12 +96,14 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if !m.ready {
 			m.viewport = viewport.New(msg.Width, msg.Height-verticalMarginHeight)
 			m.viewport.YPosition = headerHeight - 1
-			m.ready = true
 			m.context.ViewportWidth = m.viewport.Width
 			m.context.ViewportHeight = m.viewport.Height
 			m.context.ViewportYOffset = m.viewport.YOffset
 			m.context.ViewportYPosition = m.viewport.YPosition
 			m.viewport.SetContent(activeTab.Page.View())
+			_, cmd := activeTab.Update(msg)
+			cmds = append(cmds, cmd)
+			m.ready = true
 		} else {
 			m.viewport.Width = msg.Width
 			m.viewport.Height = msg.Height - verticalMarginHeight

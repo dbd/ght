@@ -38,8 +38,7 @@ var fullHelp = [][]key.Binding{
 
 func (m Model) Init() tea.Cmd {
 	var cmds []tea.Cmd
-	fmt.Println("In pr search init")
-	cmds = append(cmds, api.GetPullRequestsCmd("is:pr assignee:@me"))
+	cmds = append(cmds, api.GetPullRequestsCmd(m.query))
 	return tea.Batch(cmds...)
 }
 
@@ -69,11 +68,10 @@ func getColumns(maxWidth int) []table.Column {
 func newEmptyTable(prs []api.PullRequestResponse, ctx *components.Context) table.Model {
 	maxWidth, _, _ := term.GetSize(int(os.Stdout.Fd()))
 	columns := getColumns(maxWidth)
-	ctx.StatusText = fmt.Sprintf("%+v", maxWidth)
 	t := table.New(
 		table.WithColumns(columns),
 		table.WithFocused(true),
-		table.WithHeight(7),
+		table.WithHeight(ctx.ViewportHeight),
 	)
 	return t
 
@@ -82,6 +80,9 @@ func newEmptyTable(prs []api.PullRequestResponse, ctx *components.Context) table
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
 	switch msg := msg.(type) {
+	case tea.WindowSizeMsg:
+		m.Context.StatusText = fmt.Sprintf("%+v", m.Context.ViewportHeight)
+		m.table.SetHeight(m.Context.ViewportHeight)
 	case api.PullRequests:
 		m.PullRequests = msg.PullRequests
 		var rows []table.Row
