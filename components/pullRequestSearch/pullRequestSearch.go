@@ -31,14 +31,18 @@ type OpenPR struct {
 	PR api.PullRequestResponse
 }
 
-var fullHelp = [][]key.Binding{
-	{components.DefaultKeyMap.Up, components.DefaultKeyMap.Down, components.DefaultKeyMap.Enter},
-	{components.DefaultKeyMap.Filter, components.DefaultKeyMap.Close, components.DefaultKeyMap.Exit},
-}
+var (
+	fullHelp = [][]key.Binding{
+		{components.DefaultKeyMap.Up, components.DefaultKeyMap.Down, components.DefaultKeyMap.Enter},
+		{components.DefaultKeyMap.Filter, components.DefaultKeyMap.Close, components.DefaultKeyMap.Exit},
+	}
+	fetchingStatus = "Fetching pull requests..."
+)
 
 func (m Model) Init() tea.Cmd {
 	var cmds []tea.Cmd
 	m.table.SetHeight(m.Context.ViewportHeight)
+	m.Context.StatusText = fetchingStatus
 	cmds = append(cmds, api.GetPullRequestsCmd(m.query))
 	return tea.Batch(cmds...)
 }
@@ -82,13 +86,15 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
-		m.Context.StatusText = fmt.Sprintf("%+v", m.Context.ViewportHeight)
 		m.table.SetHeight(m.Context.ViewportHeight)
 		t, cmd := m.table.Update(msg)
 		m.table = t
 		cmds = append(cmds, cmd)
 	case api.PullRequests:
 		if msg.Query == m.query {
+			if m.Context.StatusText == fetchingStatus {
+				m.Context.StatusText = ""
+			}
 			m.PullRequests = msg.PullRequests
 			var rows []table.Row
 			for _, pr := range m.PullRequests {
