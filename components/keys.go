@@ -5,15 +5,16 @@ import (
 )
 
 type KeyMap struct {
-	Up     key.Binding
-	Down   key.Binding
-	Left   key.Binding
-	Right  key.Binding
-	Close  key.Binding
-	Exit   key.Binding
-	Enter  key.Binding
-	Help   key.Binding
-	Filter key.Binding
+	Up      key.Binding
+	Down    key.Binding
+	Left    key.Binding
+	Right   key.Binding
+	Close   key.Binding
+	Exit    key.Binding
+	Enter   key.Binding
+	Help    key.Binding
+	Filter  key.Binding
+	Suspend key.Binding
 }
 
 func (k KeyMap) ShortHelp() []key.Binding {
@@ -63,5 +64,9 @@ var DefaultKeyMap = KeyMap{
 	Filter: key.NewBinding(
 		key.WithKeys("/"),
 		key.WithHelp("/", "filter"),
+	),
+	Suspend: key.NewBinding(
+		key.WithKeys("ctrl+z"),
+		key.WithHelp("^z", "suspend"),
 	),
 }

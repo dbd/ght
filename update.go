@@ -63,6 +63,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.Tabs[m.activeTab] = activeTab
 		}
 	case tea.KeyMsg:
+		if key.Matches(msg, m.context.KeyMap.Suspend) {
+			return m, tea.Suspend
+		}
 		if !m.focused {
 			activeTab, cmd := activeTab.Update(msg)
 			cmds = append(cmds, cmd)
