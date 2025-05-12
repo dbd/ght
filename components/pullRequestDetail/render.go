@@ -101,7 +101,7 @@ func formatTimelineItem(p api.PullRequestTimelineItem, width int, topCorner, bot
 	case "ReviewRequestRemovedEvent":
 		s = fmt.Sprintf("%s removed requested review from %s %s ago", formatActor(p.ReviewRequestRemovedEvent.Actor), formatReviewer(p.ReviewRequestRemovedEvent.RequestedReviewer), p.ReviewRequestRemovedEvent.CreatedAt.ShortSince())
 	case "PullRequestCommit":
-		s = fmt.Sprintf("%s committed %s %s ago", formatCommitAuthor(p.PullRequestCommit.Commit.Author), p.PullRequestCommit.Commit.AbbreviatedOid, p.PullRequestCommit.Commit.AuthoredDate.ShortSince())
+		s = fmt.Sprintf("%s committed \"%s\" (%s) %s ago", formatCommitAuthor(p.PullRequestCommit.Commit.Author), p.PullRequestCommit.Commit.Message, p.PullRequestCommit.Commit.AbbreviatedOid, p.PullRequestCommit.Commit.AuthoredDate.ShortSince())
 	case "UnassignedEvent":
 		s = fmt.Sprintf("%s removed assignee %s %s ago", formatActor(p.AssignedEvent.Actor), formatAssignee(p.AssignedEvent.Assignee), p.AssignedEvent.CreatedAt.ShortSince())
 	case "UnlabeledEvent":
