@@ -17,8 +17,8 @@ import (
 )
 
 type Model struct {
-	Context      *components.Context
-	PullRequests []api.PullRequestResponse
+	context      *components.Context
+	pullRequests []api.PullRequestResponse
 	focused      bool
 	showHelp     bool
 	table        table.Model
@@ -41,8 +41,8 @@ var (
 
 func (m Model) Init() tea.Cmd {
 	var cmds []tea.Cmd
-	m.table.SetHeight(m.Context.ViewportHeight)
-	m.Context.StatusText = fetchingStatus
+	m.table.SetHeight(m.context.ViewportHeight)
+	m.context.StatusText = fetchingStatus
 	cmds = append(cmds, api.GetPullRequestsCmd(m.query))
 	return tea.Batch(cmds...)
 }
@@ -51,7 +51,7 @@ func NewModel(prs []api.PullRequestResponse, query string, ctx *components.Conte
 	t := newEmptyTable(prs, ctx)
 	ts := table.Styles{Header: components.TableHeader, Selected: components.TableSelected}
 	t.SetStyles(ts)
-	m := Model{Context: ctx, table: t, query: query, filter: textinput.New()}
+	m := Model{context: ctx, table: t, query: query, filter: textinput.New()}
 	return &m
 }
 
@@ -86,18 +86,18 @@ func (m Model) Update(msg tea.Msg) (components.Page, tea.Cmd) {
 	var cmds []tea.Cmd
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
-		m.table.SetHeight(m.Context.ViewportHeight)
+		m.table.SetHeight(m.context.ViewportHeight)
 		t, cmd := m.table.Update(msg)
 		m.table = t
 		cmds = append(cmds, cmd)
 	case api.PullRequests:
 		if msg.Query == m.query {
-			if m.Context.StatusText == fetchingStatus {
-				m.Context.StatusText = ""
+			if m.context.StatusText == fetchingStatus {
+				m.context.StatusText = ""
 			}
-			m.PullRequests = msg.PullRequests
+			m.pullRequests = msg.PullRequests
 			var rows []table.Row
-			for _, pr := range m.PullRequests {
+			for _, pr := range m.pullRequests {
 				rows = append(rows, table.Row{pr.CreatedAt.ShortSince(), pr.Repository.Name, strconv.FormatInt(pr.Number, 10), pr.Author.Login, "false", pr.Title})
 			}
 			m.table.SetRows(rows)
@@ -108,7 +108,7 @@ func (m Model) Update(msg tea.Msg) (components.Page, tea.Cmd) {
 			filter, cmd := m.filter.Update(msg)
 			cmds = append(cmds, cmd)
 			m.filter = filter
-			if key.Matches(msg, m.Context.KeyMap.Enter) {
+			if key.Matches(msg, m.context.KeyMap.Enter) {
 				m.filter.Blur()
 				m.table.SetRows(m.filteredRows())
 				break
@@ -116,22 +116,22 @@ func (m Model) Update(msg tea.Msg) (components.Page, tea.Cmd) {
 			break
 		}
 		switch {
-		case key.Matches(msg, m.Context.KeyMap.Enter):
+		case key.Matches(msg, m.context.KeyMap.Enter):
 			cmds = append(cmds, m.openPR(m.table.SelectedRow()))
-		case key.Matches(msg, m.Context.KeyMap.Filter):
+		case key.Matches(msg, m.context.KeyMap.Filter):
 			m.filter.Focus()
-		case key.Matches(msg, m.Context.KeyMap.Up):
+		case key.Matches(msg, m.context.KeyMap.Up):
 			if m.table.Cursor() == 0 {
 				cmds = append(cmds, m.Blur)
 			}
-		case key.Matches(msg, m.Context.KeyMap.Up):
+		case key.Matches(msg, m.context.KeyMap.Up):
 			if m.table.Cursor() == 0 {
 				cmds = append(cmds, m.Blur)
 			}
 		}
 	}
-	if m.table.Width() != m.Context.ViewportWidth {
-		maxWidth := m.Context.ViewportWidth
+	if m.table.Width() != m.context.ViewportWidth {
+		maxWidth := m.context.ViewportWidth
 		m.table.SetWidth(maxWidth)
 		columns := getColumns(maxWidth)
 		m.table.SetColumns(columns)
@@ -144,7 +144,7 @@ func (m Model) Update(msg tea.Msg) (components.Page, tea.Cmd) {
 
 func (m Model) View() string {
 	doc := strings.Builder{}
-	doc.WriteString(components.BoxBorderStyle.Width(m.Context.ViewportWidth-2).Align(lipgloss.Left).Render(m.query) + "\n")
+	doc.WriteString(components.BoxBorderStyle.Width(m.context.ViewportWidth-2).Align(lipgloss.Left).Render(m.query) + "\n")
 	doc.WriteString(m.table.View())
 	body := doc.String()
 	if m.showHelp {
@@ -152,12 +152,12 @@ func (m Model) View() string {
 		width = width / 2
 		vc := height / 2
 
-		body = components.RenderHelpBox(m.Context.Help.FullHelpView(fullHelp), body, width, vc, 0)
+		body = components.RenderHelpBox(m.context.Help.FullHelpView(fullHelp), body, width, vc, 0)
 	}
 	if m.filter.Focused() {
 		width, _, _ := term.GetSize(int(os.Stdout.Fd()))
 		width = width / 2
-		vc := m.Context.ViewportHeight / 2
+		vc := m.context.ViewportHeight / 2
 		body = components.RenderFilter(m.filter.View(), body, width, vc, width/2)
 
 	}
@@ -187,7 +187,7 @@ func (m Model) openPR(row table.Row) tea.Cmd {
 	if err != nil {
 		panic(err)
 	}
-	for _, pr = range m.PullRequests {
+	for _, pr = range m.pullRequests {
 		if row[1] == pr.Repository.Name && int64(i) == pr.Number {
 			break
 		}
