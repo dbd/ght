@@ -50,3 +50,7 @@ func (m Model) Init() tea.Cmd {
 	cmds = append(cmds, m.page.Init())
 	return tea.Batch(cmds...)
 }
+
+func (m Model) IsInTextInput() bool {
+	return m.page.IsInTextInput()
+}

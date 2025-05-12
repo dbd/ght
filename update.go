@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -51,6 +53,25 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if key.Matches(msg, m.context.KeyMap.Suspend) {
 			return m, tea.Suspend
 		}
+		if m.command.Focused() {
+			command, cmd := m.command.Update(msg)
+			cmds = append(cmds, cmd)
+			m.command = command
+			m.context.StatusText = fmt.Sprintf(":%s█", m.command.Value())
+			if key.Matches(msg, m.context.KeyMap.Enter) {
+				m.command.Blur()
+				m.context.StatusText = ""
+				cmd := m.sendCommandMessage(m.command.Value())
+				cmds = append(cmds, cmd)
+				m.command.SetValue("")
+				break
+			}
+			break
+		}
+		if key.Matches(msg, m.context.KeyMap.Leader) && m.canEnterCommandMode() {
+			m.command.Focus()
+			m.context.StatusText = ":█"
+		}
 		if !m.focused {
 			activeTab, cmd := activeTab.Update(msg)
 			cmds = append(cmds, cmd)
@@ -100,4 +121,13 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.Tabs = tabs
 	}
 	return m, tea.Batch(cmds...)
+}
+
+func (m Model) canEnterCommandMode() bool {
+	for _, tab := range m.Tabs {
+		if tab.IsInTextInput() {
+			return false
+		}
+	}
+	return true
 }

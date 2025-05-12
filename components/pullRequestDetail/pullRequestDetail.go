@@ -189,3 +189,7 @@ func (m *Model) ToggleHelp() tea.Msg {
 	m.showHelp = !m.showHelp
 	return m.showHelp
 }
+
+func (m *Model) IsInTextInput() bool {
+	return false
+}

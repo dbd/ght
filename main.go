@@ -6,6 +6,7 @@ import (
 
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
+	"github.com/charmbracelet/bubbles/textinput"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -23,6 +24,7 @@ type Model struct {
 	viewport  viewport.Model
 	ready     bool
 	context   *components.Context
+	command   textinput.Model
 	focused   bool
 	showHelp  bool
 }
@@ -42,6 +44,7 @@ func initializeModel() Model {
 		context:  &ctx,
 		focused:  true,
 		showHelp: false,
+		command:  textinput.New(),
 	}
 	headerHeight := lipgloss.Height(m.headerView())
 	footerHeight := lipgloss.Height(m.footerView())
