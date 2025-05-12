@@ -46,7 +46,7 @@ func (m Model) Init() tea.Cmd {
 	return nil
 }
 
-func NewModel(pr api.PullRequestResponse, ctx *components.Context) Model {
+func NewModel(pr api.PullRequestResponse, ctx *components.Context) *Model {
 	var m Model
 	m.PullRequest = pr
 	m.Context = ctx
@@ -70,10 +70,10 @@ func NewModel(pr api.PullRequestResponse, ctx *components.Context) Model {
 	}
 	m.diff = diff.String()
 
-	return m
+	return &m
 }
 
-func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m Model) Update(msg tea.Msg) (components.Page, tea.Cmd) {
 	var cmds []tea.Cmd
 	m.viewport.Width = m.Context.ViewportWidth
 	m.viewport.Height = m.Context.ViewportHeight - 1
@@ -82,10 +82,6 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch {
-		case key.Matches(msg, components.DefaultKeyMap.Close):
-			cmds = append(cmds, m.Blur)
-		case key.Matches(msg, m.Context.KeyMap.Help):
-			m.showHelp = !m.showHelp
 		case key.Matches(msg, showComments):
 			m.showComments = !m.showComments
 		case key.Matches(msg, components.DefaultKeyMap.Up):
@@ -102,7 +98,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	v, vCmd := m.viewport.Update(msg)
 	m.viewport = v
 	cmds = append(cmds, vCmd, pCmd)
-	return m, tea.Batch(cmds...)
+	return &m, tea.Batch(cmds...)
 }
 
 func (m Model) View() string {
@@ -183,6 +179,15 @@ func RenderPullRequestDetail(pr api.PullRequestResponse, width int) string {
 	return doc.String()
 }
 
-func (m Model) Blur() tea.Msg {
+func (m *Model) Blur() tea.Msg {
 	return components.Blur(true)
+}
+
+func (m *Model) Focus() tea.Msg {
+	return components.Blur(false)
+}
+
+func (m *Model) ToggleHelp() tea.Msg {
+	m.showHelp = !m.showHelp
+	return m.showHelp
 }

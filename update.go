@@ -2,7 +2,6 @@ package main
 
 import (
 	"github.com/charmbracelet/bubbles/key"
-	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/dbd/ght/components"
@@ -40,33 +39,21 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		footerHeight := lipgloss.Height(m.footerView())
 		verticalMarginHeight := headerHeight + footerHeight
 
-		if !m.ready {
-			m.viewport = viewport.New(msg.Width, msg.Height-verticalMarginHeight)
-			m.viewport.YPosition = headerHeight - 1
-			m.context.ViewportWidth = m.viewport.Width
-			m.context.ViewportHeight = m.viewport.Height
-			m.context.ViewportYOffset = m.viewport.YOffset
-			m.context.ViewportYPosition = m.viewport.YPosition
-			m.viewport.SetContent(activeTab.Page.View())
-			_, cmd := activeTab.Update(msg)
-			cmds = append(cmds, cmd)
-			m.ready = true
-		} else {
-			m.viewport.Width = msg.Width
-			m.viewport.Height = msg.Height - verticalMarginHeight
-			m.context.ViewportWidth = m.viewport.Width
-			m.context.ViewportHeight = m.viewport.Height
-			m.context.ViewportYOffset = m.viewport.YOffset
-			m.context.ViewportYPosition = m.viewport.YPosition
-			activeTab, cmd := activeTab.Update(msg)
-			cmds = append(cmds, cmd)
-			m.Tabs[m.activeTab] = activeTab
-		}
+		m.viewport.Width = msg.Width
+		m.viewport.Height = msg.Height - verticalMarginHeight
+		m.context.ViewportWidth = m.viewport.Width
+		m.context.ViewportHeight = m.viewport.Height
+		m.context.ViewportYOffset = m.viewport.YOffset
+		m.context.ViewportYPosition = m.viewport.YPosition
+		activeTab, cmd := activeTab.Update(msg)
+		cmds = append(cmds, cmd)
+		m.Tabs[m.activeTab] = activeTab
 	case tea.KeyMsg:
 		if key.Matches(msg, m.context.KeyMap.Suspend) {
 			return m, tea.Suspend
 		}
 		if !m.focused {
+			activeTab.IsActive = true
 			activeTab, cmd := activeTab.Update(msg)
 			cmds = append(cmds, cmd)
 			m.Tabs[m.activeTab] = activeTab
