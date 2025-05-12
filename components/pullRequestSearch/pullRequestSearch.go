@@ -181,6 +181,10 @@ func (m *Model) ToggleHelp() tea.Msg {
 	return m.showHelp
 }
 
+func (m *Model) IsInTextInput() bool {
+	return m.filter.Focused()
+}
+
 func (m Model) openPR(row table.Row) tea.Cmd {
 	var pr api.PullRequestResponse
 	i, err := strconv.Atoi(row[2])

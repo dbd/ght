@@ -15,6 +15,7 @@ type KeyMap struct {
 	Help    key.Binding
 	Filter  key.Binding
 	Suspend key.Binding
+	Leader  key.Binding
 }
 
 func (k KeyMap) ShortHelp() []key.Binding {
@@ -68,5 +69,9 @@ var DefaultKeyMap = KeyMap{
 	Suspend: key.NewBinding(
 		key.WithKeys("ctrl+z"),
 		key.WithHelp("^z", "suspend"),
+	),
+	Leader: key.NewBinding(
+		key.WithKeys(":"),
+		key.WithHelp(":", "leader"),
 	),
 }
