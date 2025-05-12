@@ -7,48 +7,46 @@ import (
 )
 
 type Model struct {
-	Name     string
-	Context  *components.Context
-	IsActive bool
-	Page     components.Page
-	Focused  bool
+	Name    string
+	context *components.Context
+	page    components.Page
 }
 
-func NewModel(ctx *components.Context, name string) Model {
+func NewModel(ctx *components.Context, name string, page components.Page) Model {
 	return Model{
-		Name:     name,
-		Context:  ctx,
-		IsActive: false,
+		Name:    name,
+		context: ctx,
+		page:    page,
 	}
 }
 
 func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 	var cmd tea.Cmd
 	var cmds []tea.Cmd
-	m.Page.Focus()
+	m.page.Focus()
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch {
-		case key.Matches(msg, m.Context.KeyMap.Help):
-			m.Page.ToggleHelp()
-			cmds = append(cmds, m.Page.ToggleHelp)
+		case key.Matches(msg, m.context.KeyMap.Help):
+			m.page.ToggleHelp()
+			cmds = append(cmds, m.page.ToggleHelp)
 		case key.Matches(msg, components.DefaultKeyMap.Close):
-			cmds = append(cmds, m.Page.Blur)
-		case key.Matches(msg, m.Context.KeyMap.Exit):
+			cmds = append(cmds, m.page.Blur)
+		case key.Matches(msg, m.context.KeyMap.Exit):
 			return m, tea.Quit
 		}
 	}
-	m.Page, cmd = m.Page.Update(msg)
+	m.page, cmd = m.page.Update(msg)
 	cmds = append(cmds, cmd)
 	return m, tea.Batch(cmds...)
 }
 
 func (m Model) View() string {
-	return m.Page.View()
+	return m.page.View()
 }
 
 func (m Model) Init() tea.Cmd {
 	var cmds []tea.Cmd
-	cmds = append(cmds, m.Page.Init())
+	cmds = append(cmds, m.page.Init())
 	return tea.Batch(cmds...)
 }
