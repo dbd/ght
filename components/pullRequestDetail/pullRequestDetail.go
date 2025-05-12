@@ -21,8 +21,8 @@ import (
 )
 
 type Model struct {
-	Context      *components.Context
-	PullRequest  api.PullRequestResponse
+	context      *components.Context
+	pullRequest  api.PullRequestResponse
 	viewport     viewport.Model
 	ready        bool
 	showComments bool
@@ -45,12 +45,12 @@ func (m Model) Init() tea.Cmd {
 
 func NewModel(pr api.PullRequestResponse, ctx *components.Context) *Model {
 	var m Model
-	m.PullRequest = pr
-	m.Context = ctx
+	m.pullRequest = pr
+	m.context = ctx
 	m.showComments = false
-	m.viewport = viewport.New(m.Context.ViewportWidth, m.Context.ViewportHeight-1)
-	m.viewport.SetContent(RenderPullRequestDetail(m.PullRequest, ctx.ViewportWidth-2))
-	m.viewport.YPosition = m.Context.ViewportYPosition
+	m.viewport = viewport.New(m.context.ViewportWidth, m.context.ViewportHeight-1)
+	m.viewport.SetContent(RenderPullRequestDetail(m.pullRequest, ctx.ViewportWidth-2))
+	m.viewport.YPosition = m.context.ViewportYPosition
 	m.ready = true
 
 	p := paginator.New()
@@ -73,8 +73,8 @@ func NewModel(pr api.PullRequestResponse, ctx *components.Context) *Model {
 
 func (m Model) Update(msg tea.Msg) (components.Page, tea.Cmd) {
 	var cmds []tea.Cmd
-	m.viewport.Width = m.Context.ViewportWidth
-	m.viewport.Height = m.Context.ViewportHeight - 1
+	m.viewport.Width = m.context.ViewportWidth
+	m.viewport.Height = m.context.ViewportHeight - 1
 	p, pCmd := m.paginator.Update(msg)
 	m.paginator = p
 	switch msg := msg.(type) {
@@ -89,7 +89,7 @@ func (m Model) Update(msg tea.Msg) (components.Page, tea.Cmd) {
 		}
 	}
 	if m.paginator.Page == 0 {
-		m.viewport.SetContent(RenderPullRequestDetail(m.PullRequest, m.Context.ViewportWidth-2))
+		m.viewport.SetContent(RenderPullRequestDetail(m.pullRequest, m.context.ViewportWidth-2))
 	} else {
 		m.viewport.SetContent(m.RenderPullDiff())
 	}
@@ -101,7 +101,7 @@ func (m Model) Update(msg tea.Msg) (components.Page, tea.Cmd) {
 
 func (m Model) View() string {
 	doc := strings.Builder{}
-	doc.WriteString(components.CenterAll.Copy().Width(m.Context.ViewportWidth - 2).Render(m.paginator.View()))
+	doc.WriteString(components.CenterAll.Copy().Width(m.context.ViewportWidth - 2).Render(m.paginator.View()))
 	doc.WriteString("\n")
 	doc.WriteString(m.viewport.View())
 	body := doc.String()
@@ -110,7 +110,7 @@ func (m Model) View() string {
 		width = width / 2
 		vc := height / 2
 
-		body = components.RenderHelpBox(m.Context.Help.FullHelpView(fullHelp), body, width, vc, 0)
+		body = components.RenderHelpBox(m.context.Help.FullHelpView(fullHelp), body, width, vc, 0)
 	}
 	return body
 }
@@ -118,7 +118,7 @@ func (m Model) View() string {
 func (m Model) RenderPullDiff() string {
 	files := utils.ParseDiffText(m.diff)
 	doc := strings.Builder{}
-	rtm := m.PullRequest.ReviewThreads.GetPRCommentsMap()
+	rtm := m.pullRequest.ReviewThreads.GetPRCommentsMap()
 	for _, file := range files {
 		body := strings.Builder{}
 		header := strings.Builder{}
