@@ -56,8 +56,7 @@ func initializeModel() Model {
 	m.context.ViewportYPosition = m.viewport.YPosition
 	tabs := []tab.Model{}
 	for _, search := range config.Pr.Searches {
-		t := tab.NewModel(&ctx, search.Name)
-		t.Page = pullRequestSearch.NewModel([]api.PullRequestResponse{}, search.Query, &ctx)
+		t := tab.NewModel(&ctx, search.Name, pullRequestSearch.NewModel([]api.PullRequestResponse{}, search.Query, &ctx))
 		tabs = append(tabs, t)
 	}
 	m.Tabs = tabs

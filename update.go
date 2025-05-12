@@ -26,8 +26,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.activeTab = len(m.Tabs) - 1
 			m.focused = true
 		} else {
-			t := tab.NewModel(m.context, msg.PR.Title)
-			t.Page = pullRequestDetail.NewModel(msg.PR, m.context)
+			t := tab.NewModel(m.context, msg.PR.Title, pullRequestDetail.NewModel(msg.PR, m.context))
 			m.Tabs = append(m.Tabs, t)
 			m.activeTab = len(m.Tabs) - 1
 			m.focused = true
@@ -53,7 +52,6 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Suspend
 		}
 		if !m.focused {
-			activeTab.IsActive = true
 			activeTab, cmd := activeTab.Update(msg)
 			cmds = append(cmds, cmd)
 			m.Tabs[m.activeTab] = activeTab
