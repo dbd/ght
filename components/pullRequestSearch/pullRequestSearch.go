@@ -19,7 +19,7 @@ import (
 type Model struct {
 	Context      *components.Context
 	PullRequests []api.PullRequestResponse
-	Focused      bool
+	focused      bool
 	showHelp     bool
 	table        table.Model
 	query        string
@@ -47,12 +47,12 @@ func (m Model) Init() tea.Cmd {
 	return tea.Batch(cmds...)
 }
 
-func NewModel(prs []api.PullRequestResponse, query string, ctx *components.Context) Model {
+func NewModel(prs []api.PullRequestResponse, query string, ctx *components.Context) *Model {
 	t := newEmptyTable(prs, ctx)
 	ts := table.Styles{Header: components.TableHeader, Selected: components.TableSelected}
 	t.SetStyles(ts)
 	m := Model{Context: ctx, table: t, query: query, filter: textinput.New()}
-	return m
+	return &m
 }
 
 func getColumns(maxWidth int) []table.Column {
@@ -82,7 +82,7 @@ func newEmptyTable(prs []api.PullRequestResponse, ctx *components.Context) table
 
 }
 
-func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m Model) Update(msg tea.Msg) (components.Page, tea.Cmd) {
 	var cmds []tea.Cmd
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
@@ -118,18 +118,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch {
 		case key.Matches(msg, m.Context.KeyMap.Enter):
 			cmds = append(cmds, m.openPR(m.table.SelectedRow()))
-		case key.Matches(msg, m.Context.KeyMap.Help):
-			m.showHelp = !m.showHelp
 		case key.Matches(msg, m.Context.KeyMap.Filter):
 			m.filter.Focus()
-		case key.Matches(msg, m.Context.KeyMap.Exit):
-			return m, tea.Quit
-		case key.Matches(msg, m.Context.KeyMap.Close):
-			if m.table.Focused() {
-				m.table.Blur()
-			} else {
-				m.table.Focus()
-			}
 		case key.Matches(msg, m.Context.KeyMap.Up):
 			if m.table.Cursor() == 0 {
 				cmds = append(cmds, m.Blur)
@@ -149,7 +139,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	t, cmd := m.table.Update(msg)
 	m.table = t
 	cmds = append(cmds, cmd)
-	return m, tea.Batch(cmds...)
+	return &m, tea.Batch(cmds...)
 }
 
 func (m Model) View() string {
@@ -174,8 +164,21 @@ func (m Model) View() string {
 	return body
 }
 
-func (m Model) Blur() tea.Msg {
+func (m *Model) Blur() tea.Msg {
+	m.focused = false
+	m.table.Blur()
 	return components.Blur(true)
+}
+
+func (m *Model) Focus() tea.Msg {
+	m.focused = true
+	m.table.Focus()
+	return m.focused
+}
+
+func (m *Model) ToggleHelp() tea.Msg {
+	m.showHelp = !m.showHelp
+	return m.showHelp
 }
 
 func (m Model) openPR(row table.Row) tea.Cmd {
