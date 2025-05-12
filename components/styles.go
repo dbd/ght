@@ -1,6 +1,9 @@
 package components
 
-import "github.com/charmbracelet/lipgloss"
+import (
+	"github.com/charmbracelet/bubbles/help"
+	"github.com/charmbracelet/lipgloss"
+)
 
 var (
 	// Palette
@@ -129,4 +132,27 @@ var (
 
 	StatusHelpStyle = statusNugget.Copy().Background(lipgloss.Color("#6124DF"))
 	HelpBox         = CenterAll.Copy()
+	keyStyle        = lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{
+		Light: "#dbdbdb",
+		Dark:  "#dbdbdb",
+	})
+
+	descStyle = lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{
+		Light: "#dbdbdb",
+		Dark:  "#dbdbdb",
+	})
+
+	sepStyle = lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{
+		Light: "#dbdbdb",
+		Dark:  "#dbdbdb",
+	})
+	HelpStyles = help.Styles{
+		ShortKey:       keyStyle,
+		ShortDesc:      descStyle,
+		ShortSeparator: sepStyle,
+		Ellipsis:       sepStyle.Copy(),
+		FullKey:        keyStyle.Copy(),
+		FullDesc:       descStyle.Copy(),
+		FullSeparator:  sepStyle.Copy(),
+	}
 )

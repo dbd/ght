@@ -35,9 +35,7 @@ var fullHelp = [][]key.Binding{
 func initializeModel() Model {
 	config := components.SetupConfig()
 	h := help.New()
-	h.Styles.FullKey.UnsetForeground()
-	h.Styles.FullDesc.UnsetForeground()
-	h.Styles.FullKey.UnsetForeground()
+	h.Styles = components.HelpStyles
 	ctx := components.Context{KeyMap: components.DefaultKeyMap, Help: h}
 	m := Model{
 		config:   config,

@@ -36,10 +36,7 @@ var (
 		key.WithKeys("c"),
 		key.WithHelp("c", "show comments"))
 
-	fullHelp = [][]key.Binding{
-		{components.DefaultKeyMap.Up, components.DefaultKeyMap.Down, components.DefaultKeyMap.Enter},
-		{components.DefaultKeyMap.Filter, components.DefaultKeyMap.Close, components.DefaultKeyMap.Exit},
-	}
+	fullHelp = [][]key.Binding{{}, {}}
 )
 
 func (m Model) Init() tea.Cmd {
@@ -69,6 +66,7 @@ func NewModel(pr api.PullRequestResponse, ctx *components.Context) *Model {
 		log.Fatal(err)
 	}
 	m.diff = diff.String()
+	fullHelp = [][]key.Binding{{components.DefaultKeyMap.Up, components.DefaultKeyMap.Down, components.DefaultKeyMap.Enter, showComments}, {m.viewport.KeyMap.PageDown, m.viewport.KeyMap.PageUp, m.viewport.KeyMap.HalfPageUp, m.viewport.KeyMap.HalfPageDown}}
 
 	return &m
 }
@@ -108,9 +106,9 @@ func (m Model) View() string {
 	doc.WriteString(m.viewport.View())
 	body := doc.String()
 	if m.showHelp {
-		width, _, _ := term.GetSize(int(os.Stdout.Fd()))
+		width, height, _ := term.GetSize(int(os.Stdout.Fd()))
 		width = width / 2
-		vc := m.Context.ViewportHeight / 2
+		vc := height / 2
 
 		body = components.RenderHelpBox(m.Context.Help.FullHelpView(fullHelp), body, width, vc, 0)
 	}
