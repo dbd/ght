@@ -148,9 +148,9 @@ func (m Model) View() string {
 	doc.WriteString(m.table.View())
 	body := doc.String()
 	if m.showHelp {
-		width, _, _ := term.GetSize(int(os.Stdout.Fd()))
+		width, height, _ := term.GetSize(int(os.Stdout.Fd()))
 		width = width / 2
-		vc := m.Context.ViewportHeight / 2
+		vc := height / 2
 
 		body = components.RenderHelpBox(m.Context.Help.FullHelpView(fullHelp), body, width, vc, 0)
 	}
