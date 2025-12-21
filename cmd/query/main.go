@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	prs := api.GetPullRequests("reviewed-by:@me")
+	prs := api.GetPullRequests("is:pr author:@me")
 	//for _, pr := range prs {
 	//	fmt.Printf("%v+\n", pr)
 	//}
@@ -17,5 +17,6 @@ func main() {
 
 	// fmt.Printf("%+v\n", pr.TimelineItems.Nodes[2])
 	// fmt.Printf("%+v\n", prs[len(prs)-1].TimelineItems.Nodes[4].Format())
-	fmt.Println(pullRequestDetail.RenderPullRequestDetail(pr, 160))
+	fmt.Println(pullRequestDetail.RenderMergeOverlay(pr, 160))
+
 }

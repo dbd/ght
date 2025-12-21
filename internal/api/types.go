@@ -13,6 +13,7 @@ type PullRequests struct {
 }
 
 type PullRequestResponse struct {
+	ID                 string    `graphql:"id"`
 	Assignees          Assignees `graphql:"assignees(first: 3)"`
 	Author             Actor
 	Title              string
@@ -37,8 +38,11 @@ type PullRequestResponse struct {
 }
 
 type Repository struct {
-	Name          string
-	NameWithOwner string
+	Name               string
+	NameWithOwner      string
+	MergeCommitAllowed bool
+	RebaseMergeAllowed bool
+	SquashMergeAllowed bool
 }
 
 type Reviews struct {

@@ -245,3 +245,24 @@ func formatReviewers(pr api.PullRequestResponse) string {
 	}
 	return doc.String()
 }
+
+func RenderMergeOverlay(pr api.PullRequestResponse, width int) string {
+	var allowedMergeTypes []string
+	doc := strings.Builder{}
+	if pr.Repository.MergeCommitAllowed {
+		allowedMergeTypes = append(allowedMergeTypes, "Merge Commit")
+	}
+	if pr.Repository.RebaseMergeAllowed {
+		allowedMergeTypes = append(allowedMergeTypes, "Rebase")
+	}
+	if pr.Repository.SquashMergeAllowed {
+		allowedMergeTypes = append(allowedMergeTypes, "Squash Commits")
+	}
+
+	doc.WriteString("Merging pull request " + pr.Repository.NameWithOwner + "#" + strconv.FormatInt(pr.Number, 10) + "\n")
+	doc.WriteString("Allowed merge types\n")
+	for _, t := range allowedMergeTypes {
+		doc.WriteString("\t - " + t + "\n")
+	}
+	return doc.String()
+}
