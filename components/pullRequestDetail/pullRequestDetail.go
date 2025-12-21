@@ -24,6 +24,7 @@ type Model struct {
 	context      *components.Context
 	pullRequest  api.PullRequestResponse
 	mergeDialog  components.MergeDialogModel
+	reviewDialog components.ReviewDialogModel
 	viewport     viewport.Model
 	ready        bool
 	showComments bool
@@ -40,6 +41,18 @@ var (
 	openMerge = key.NewBinding(
 		key.WithKeys("m"),
 		key.WithHelp("m", "merge PR"))
+
+	openComment = key.NewBinding(
+		key.WithKeys("C"),
+		key.WithHelp("C", "add comment"))
+
+	openApprove = key.NewBinding(
+		key.WithKeys("a"),
+		key.WithHelp("a", "approve PR"))
+
+	openRequestChanges = key.NewBinding(
+		key.WithKeys("x"),
+		key.WithHelp("x", "request changes"))
 
 	fullHelp = [][]key.Binding{{}, {}}
 )
@@ -71,8 +84,9 @@ func NewModel(pr api.PullRequestResponse, ctx *components.Context) *Model {
 		log.Fatal(err)
 	}
 	m.diff = diff.String()
-	fullHelp = [][]key.Binding{{components.DefaultKeyMap.Up, components.DefaultKeyMap.Down, components.DefaultKeyMap.Enter, showComments, openMerge}, {m.viewport.KeyMap.PageDown, m.viewport.KeyMap.PageUp, m.viewport.KeyMap.HalfPageUp, m.viewport.KeyMap.HalfPageDown}}
+	fullHelp = [][]key.Binding{{components.DefaultKeyMap.Up, components.DefaultKeyMap.Down, showComments, openMerge}, {openComment, openApprove, openRequestChanges}, {m.viewport.KeyMap.PageDown, m.viewport.KeyMap.PageUp, m.viewport.KeyMap.HalfPageUp, m.viewport.KeyMap.HalfPageDown}}
 	m.mergeDialog = *components.NewMergeDialogModel(ctx, pr)
+	m.reviewDialog = *components.NewReviewDialogModel(ctx, pr)
 	return &m
 }
 
@@ -93,6 +107,17 @@ func (m Model) Update(msg tea.Msg) (components.Page, tea.Cmd) {
 		}
 		return &m, tea.Batch(cmds...)
 	}
+	if m.reviewDialog.Focused() {
+		rd, rdCmd := m.reviewDialog.Update(msg)
+		m.reviewDialog = *rd.(*components.ReviewDialogModel)
+		cmds = append(cmds, rdCmd)
+		if msg, ok := msg.(tea.KeyMsg); ok {
+			if key.Matches(msg, components.DefaultKeyMap.Exit) {
+				m.reviewDialog.Blur()
+			}
+		}
+		return &m, tea.Batch(cmds...)
+	}
 	switch msg := msg.(type) {
 	case api.MergeResult:
 		if msg.Success {
@@ -107,12 +132,41 @@ func (m Model) Update(msg tea.Msg) (components.Page, tea.Cmd) {
 		} else {
 			m.context.StatusText = "Failed to refresh PR: " + msg.Error.Error()
 		}
+	case api.ReviewResult:
+		if msg.Success {
+			var actionStr string
+			switch msg.Action {
+			case api.ReviewActionApprove:
+				actionStr = "approved"
+			case api.ReviewActionRequestChanges:
+				actionStr = "requested changes on"
+			default:
+				actionStr = "reviewed"
+			}
+			m.context.StatusText = "Successfully " + actionStr + " PR #" + strconv.FormatInt(msg.PR.Number, 10)
+			cmds = append(cmds, api.GetPullRequestCmd(msg.PR.Repository.NameWithOwner, msg.PR.Number))
+		} else {
+			m.context.StatusText = "Review failed: " + msg.Error.Error()
+		}
+	case api.CommentResult:
+		if msg.Success {
+			m.context.StatusText = "Comment added to PR #" + strconv.FormatInt(msg.PR.Number, 10)
+			cmds = append(cmds, api.GetPullRequestCmd(msg.PR.Repository.NameWithOwner, msg.PR.Number))
+		} else {
+			m.context.StatusText = "Comment failed: " + msg.Error.Error()
+		}
 	case tea.KeyMsg:
 		switch {
 		case key.Matches(msg, showComments):
 			m.showComments = !m.showComments
 		case key.Matches(msg, openMerge):
 			m.mergeDialog.Focus()
+		case key.Matches(msg, openComment):
+			m.reviewDialog.FocusWithMode(components.ReviewModeComment)
+		case key.Matches(msg, openApprove):
+			m.reviewDialog.FocusWithMode(components.ReviewModeApprove)
+		case key.Matches(msg, openRequestChanges):
+			m.reviewDialog.FocusWithMode(components.ReviewModeRequestChanges)
 		case key.Matches(msg, components.DefaultKeyMap.Up):
 			if m.viewport.AtTop() {
 				cmds = append(cmds, m.Blur)
@@ -148,6 +202,12 @@ func (m Model) View() string {
 		width = width / 2
 		vc := m.context.ViewportHeight / 2
 		body = components.RenderFilter(m.mergeDialog.View(), body, width, vc, width/2)
+	}
+	if m.reviewDialog.Focused() {
+		width, _, _ := term.GetSize(int(os.Stdout.Fd()))
+		width = width / 2
+		vc := m.context.ViewportHeight / 2
+		body = components.RenderFilter(m.reviewDialog.View(), body, width, vc, width/2)
 	}
 	return body
 }
