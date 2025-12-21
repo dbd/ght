@@ -97,25 +97,27 @@ func (m Model) Update(msg tea.Msg) (components.Page, tea.Cmd) {
 	p, pCmd := m.paginator.Update(msg)
 	m.paginator = p
 	if m.mergeDialog.Focused() {
+		if msg, ok := msg.(tea.KeyMsg); ok {
+			if key.Matches(msg, components.DefaultKeyMap.Exit) || msg.String() == "q" {
+				m.mergeDialog.Blur()
+				return &m, nil
+			}
+		}
 		md, mdCmd := m.mergeDialog.Update(msg)
 		m.mergeDialog = *md.(*components.MergeDialogModel)
 		cmds = append(cmds, mdCmd)
-		if msg, ok := msg.(tea.KeyMsg); ok {
-			if key.Matches(msg, components.DefaultKeyMap.Exit) {
-				m.mergeDialog.Blur()
-			}
-		}
 		return &m, tea.Batch(cmds...)
 	}
 	if m.reviewDialog.Focused() {
-		rd, rdCmd := m.reviewDialog.Update(msg)
-		m.reviewDialog = *rd.(*components.ReviewDialogModel)
-		cmds = append(cmds, rdCmd)
 		if msg, ok := msg.(tea.KeyMsg); ok {
 			if key.Matches(msg, components.DefaultKeyMap.Exit) {
 				m.reviewDialog.Blur()
+				return &m, nil
 			}
 		}
+		rd, rdCmd := m.reviewDialog.Update(msg)
+		m.reviewDialog = *rd.(*components.ReviewDialogModel)
+		cmds = append(cmds, rdCmd)
 		return &m, tea.Batch(cmds...)
 	}
 	switch msg := msg.(type) {
@@ -146,7 +148,7 @@ func (m Model) Update(msg tea.Msg) (components.Page, tea.Cmd) {
 			m.context.StatusText = "Successfully " + actionStr + " PR #" + strconv.FormatInt(msg.PR.Number, 10)
 			cmds = append(cmds, api.GetPullRequestCmd(msg.PR.Repository.NameWithOwner, msg.PR.Number))
 		} else {
-			m.context.StatusText = "Review failed: " + msg.Error.Error()
+			m.context.StatusText = "Review failed: " + msg.Error.Error() + " | " + msg.StdErr.String()
 		}
 	case api.CommentResult:
 		if msg.Success {
@@ -199,15 +201,13 @@ func (m Model) View() string {
 	}
 	if m.mergeDialog.Focused() {
 		width, _, _ := term.GetSize(int(os.Stdout.Fd()))
-		width = width / 2
 		vc := m.context.ViewportHeight / 2
-		body = components.RenderFilter(m.mergeDialog.View(), body, width, vc, width/2)
+		body = components.RenderOverlay(m.mergeDialog.View(), body, width/4, vc)
 	}
 	if m.reviewDialog.Focused() {
 		width, _, _ := term.GetSize(int(os.Stdout.Fd()))
-		width = width / 2
 		vc := m.context.ViewportHeight / 2
-		body = components.RenderFilter(m.reviewDialog.View(), body, width, vc, width/2)
+		body = components.RenderOverlay(m.reviewDialog.View(), body, width/4, vc)
 	}
 	return body
 }

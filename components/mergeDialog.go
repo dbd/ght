@@ -51,14 +51,10 @@ func (m MergeDialogModel) Init() tea.Cmd {
 }
 
 func (m MergeDialogModel) View() string {
-	doc := strings.Builder{}
+	title := "Merge " + m.pullRequest.Repository.NameWithOwner + "#" + strconv.FormatInt(m.pullRequest.Number, 10)
 
-	title := BoldStyle.Render("Merge Pull Request")
-	doc.WriteString(title + "\n")
-	doc.WriteString(m.pullRequest.Repository.NameWithOwner + "#" + strconv.FormatInt(m.pullRequest.Number, 10) + "\n")
-	doc.WriteString(strings.Repeat("─", 40) + "\n\n")
-
-	doc.WriteString("Merge method:\n")
+	body := strings.Builder{}
+	body.WriteString("Merge method:\n")
 	for i, opt := range m.mergeOptions {
 		cursor := "  "
 		style := lipgloss.NewStyle()
@@ -66,10 +62,10 @@ func (m MergeDialogModel) View() string {
 			cursor = "> "
 			style = style.Foreground(Green).Bold(true)
 		}
-		doc.WriteString(style.Render(cursor+opt.Label) + "\n")
+		body.WriteString(style.Render(cursor+opt.Label) + "\n")
 	}
 
-	doc.WriteString("\n")
+	body.WriteString("\n")
 
 	// Delete branch option
 	deleteIdx := len(m.mergeOptions)
@@ -83,9 +79,7 @@ func (m MergeDialogModel) View() string {
 	if m.deleteAfterMerge {
 		checkbox = "[x]"
 	}
-	doc.WriteString(style.Render(cursor+checkbox+" Delete branch after merge") + "\n")
-
-	doc.WriteString("\n" + strings.Repeat("─", 40) + "\n")
+	body.WriteString(style.Render(cursor+checkbox+" Delete branch after merge") + "\n\n")
 
 	// Confirm option
 	confirmIdx := len(m.mergeOptions) + 1
@@ -95,12 +89,11 @@ func (m MergeDialogModel) View() string {
 	} else {
 		confirmStyle = confirmStyle.Foreground(Grey).Padding(0, 2)
 	}
-	doc.WriteString(confirmStyle.Render("Confirm Merge") + "\n")
+	body.WriteString(confirmStyle.Render("Confirm Merge") + "\n\n")
 
-	doc.WriteString("\n")
-	doc.WriteString(DiffLineNumberStyle.Render("↑/↓ navigate • Enter select • Esc cancel"))
+	body.WriteString(DiffLineNumberStyle.Render("↑/↓ navigate • Enter select • Esc cancel"))
 
-	return doc.String()
+	return RenderBoxWithTitle(title, body.String(), 50)
 }
 
 func (m MergeDialogModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {

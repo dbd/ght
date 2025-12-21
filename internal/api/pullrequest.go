@@ -1,6 +1,8 @@
 package api
 
 import (
+	"bytes"
+
 	"github.com/cli/go-gh/v2"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -144,6 +146,8 @@ type ReviewResult struct {
 	Error   error
 	Action  ReviewAction
 	PR      PullRequestResponse
+	Args    []string
+	StdErr  bytes.Buffer
 }
 
 func SubmitReviewCmd(pr PullRequestResponse, action ReviewAction, body string) tea.Cmd {
@@ -165,11 +169,11 @@ func SubmitReviewCmd(pr PullRequestResponse, action ReviewAction, body string) t
 
 		args = append(args, pr.HeadRefName)
 
-		_, _, err := gh.Exec(args...)
+		_, stderr, err := gh.Exec(args...)
 		if err != nil {
-			return ReviewResult{Success: false, Error: err, Action: action, PR: pr}
+			return ReviewResult{Success: false, Error: err, Action: action, PR: pr, Args: args, StdErr: stderr}
 		}
-		return ReviewResult{Success: true, Error: nil, Action: action, PR: pr}
+		return ReviewResult{Success: true, Error: nil, Action: action, PR: pr, Args: args}
 	}
 }
 
