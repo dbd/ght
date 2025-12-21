@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Agent guidelines for working in the `ght` (GitHub Terminal) codebase.
+Agent guidelines for working in the `ght` (GitHub TUI) codebase.
 
 ## Project Overview
 
@@ -202,6 +202,18 @@ API types mirror GitHub GraphQL schema with `graphql:"..."` tags.
 2. Add to `cmdMap` in `commands.go`
 3. Handle in `sendCommandMessage()`
 4. Process in appropriate component's `Update()`
+
+### Available Commands
+- `:newtab` - Create new search tab
+- `:save-tab <name>` - Save current search tab to config
+- `:refresh` - Refresh current tab (search or PR)
+- `:merge` - Open merge dialog for current PR
+- `:add-assignee <username>` - Add assignee to current PR
+- `:add-reviewer <username>` - Add reviewer to current PR
+- `:comment <message>` - Add comment to current PR
+- `:approve [message]` - Approve current PR (optional message)
+- `:request-changes <message>` - Request changes on current PR
+- `:help` - Show help dialog with all commands and key bindings
 
 ### New API Query
 1. Define response types in `internal/api/types.go`

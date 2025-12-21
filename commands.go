@@ -9,10 +9,16 @@ import (
 )
 
 var cmdMap = map[string]interface{}{
-	"merge":    components.CmdMerge{},
-	"refresh":  components.CmdRefresh{},
-	"newtab":   components.CmdNewTab{},
-	"save-tab": components.CmdSaveTab{},
+	"merge":           components.CmdMerge{},
+	"refresh":         components.CmdRefresh{},
+	"newtab":          components.CmdNewTab{},
+	"save-tab":        components.CmdSaveTab{},
+	"add-assignee":    components.CmdAddAssignee{},
+	"add-reviewer":    components.CmdAddReviewer{},
+	"comment":         components.CmdComment{},
+	"approve":         components.CmdApprove{},
+	"request-changes": components.CmdRequestChanges{},
+	"help":            components.CmdHelp{},
 }
 
 func (m Model) sendCommandMessage(command string) tea.Cmd {
@@ -30,7 +36,6 @@ func (m Model) sendCommandMessage(command string) tea.Cmd {
 	}
 	switch msg.(type) {
 	case components.CmdMerge:
-		m.context.StatusText = fmt.Sprintf("Merge Command")
 		return func() tea.Msg { return components.CmdMerge{} }
 	case components.CmdNewTab:
 		return func() tea.Msg { return components.CmdNewTab{} }
@@ -42,6 +47,34 @@ func (m Model) sendCommandMessage(command string) tea.Cmd {
 		return func() tea.Msg { return components.CmdSaveTab{Name: cmdArg} }
 	case components.CmdRefresh:
 		return func() tea.Msg { return components.CmdRefresh{} }
+	case components.CmdAddAssignee:
+		if cmdArg == "" {
+			m.context.StatusText = "Usage: add-assignee <username>"
+			return nil
+		}
+		return func() tea.Msg { return components.CmdAddAssignee{Username: cmdArg} }
+	case components.CmdAddReviewer:
+		if cmdArg == "" {
+			m.context.StatusText = "Usage: add-reviewer <username>"
+			return nil
+		}
+		return func() tea.Msg { return components.CmdAddReviewer{Username: cmdArg} }
+	case components.CmdComment:
+		if cmdArg == "" {
+			m.context.StatusText = "Usage: comment <message>"
+			return nil
+		}
+		return func() tea.Msg { return components.CmdComment{Body: cmdArg} }
+	case components.CmdApprove:
+		return func() tea.Msg { return components.CmdApprove{Body: cmdArg} }
+	case components.CmdRequestChanges:
+		if cmdArg == "" {
+			m.context.StatusText = "Usage: request-changes <message>"
+			return nil
+		}
+		return func() tea.Msg { return components.CmdRequestChanges{Body: cmdArg} }
+	case components.CmdHelp:
+		return func() tea.Msg { return components.CmdHelp{} }
 	}
 	return nil
 }

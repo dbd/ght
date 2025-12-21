@@ -77,6 +77,53 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		} else {
 			m.context.StatusText = "Cannot refresh this tab type"
 		}
+	case components.CmdAddAssignee:
+		activeTab := m.Tabs[m.activeTab]
+		if prPage, ok := activeTab.GetPage().(*pullRequestDetail.Model); ok {
+			pr := prPage.GetPullRequest()
+			m.context.StatusText = "Adding assignee..."
+			cmds = append(cmds, api.AddAssigneeCmd(pr, msg.Username))
+		} else {
+			m.context.StatusText = "Can only add assignees on PR detail tabs"
+		}
+	case components.CmdAddReviewer:
+		activeTab := m.Tabs[m.activeTab]
+		if prPage, ok := activeTab.GetPage().(*pullRequestDetail.Model); ok {
+			pr := prPage.GetPullRequest()
+			m.context.StatusText = "Adding reviewer..."
+			cmds = append(cmds, api.AddReviewerCmd(pr, msg.Username))
+		} else {
+			m.context.StatusText = "Can only add reviewers on PR detail tabs"
+		}
+	case components.CmdComment:
+		activeTab := m.Tabs[m.activeTab]
+		if prPage, ok := activeTab.GetPage().(*pullRequestDetail.Model); ok {
+			pr := prPage.GetPullRequest()
+			m.context.StatusText = "Adding comment..."
+			cmds = append(cmds, api.AddCommentCmd(pr, msg.Body))
+		} else {
+			m.context.StatusText = "Can only comment on PR detail tabs"
+		}
+	case components.CmdApprove:
+		activeTab := m.Tabs[m.activeTab]
+		if prPage, ok := activeTab.GetPage().(*pullRequestDetail.Model); ok {
+			pr := prPage.GetPullRequest()
+			m.context.StatusText = "Approving PR..."
+			cmds = append(cmds, api.SubmitReviewCmd(pr, api.ReviewActionApprove, msg.Body))
+		} else {
+			m.context.StatusText = "Can only approve PR detail tabs"
+		}
+	case components.CmdRequestChanges:
+		activeTab := m.Tabs[m.activeTab]
+		if prPage, ok := activeTab.GetPage().(*pullRequestDetail.Model); ok {
+			pr := prPage.GetPullRequest()
+			m.context.StatusText = "Requesting changes..."
+			cmds = append(cmds, api.SubmitReviewCmd(pr, api.ReviewActionRequestChanges, msg.Body))
+		} else {
+			m.context.StatusText = "Can only request changes on PR detail tabs"
+		}
+	case components.CmdHelp:
+		m.helpDialog.Focus()
 	case tea.WindowSizeMsg:
 		headerHeight := lipgloss.Height(m.headerView())
 		footerHeight := lipgloss.Height(m.footerView())
@@ -92,6 +139,16 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		cmds = append(cmds, cmd)
 		m.Tabs[m.activeTab] = activeTab
 	case tea.KeyMsg:
+		if m.helpDialog.Focused() {
+			if key.Matches(msg, m.context.KeyMap.Exit) {
+				m.helpDialog.Blur()
+				return m, nil
+			}
+			hd, hdCmd := m.helpDialog.Update(msg)
+			m.helpDialog = *hd.(*components.HelpDialogModel)
+			cmds = append(cmds, hdCmd)
+			return m, tea.Batch(cmds...)
+		}
 		if key.Matches(msg, m.context.KeyMap.Suspend) {
 			return m, tea.Suspend
 		}

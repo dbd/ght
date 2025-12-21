@@ -25,6 +25,7 @@ type Model struct {
 	pullRequest   api.PullRequestResponse
 	mergeDialog   components.MergeDialogModel
 	reviewDialog  components.ReviewDialogModel
+	inputDialog   components.InputDialogModel
 	viewport      viewport.Model
 	ready         bool
 	showComments  bool
@@ -54,6 +55,14 @@ var (
 	openRequestChanges = key.NewBinding(
 		key.WithKeys("x"),
 		key.WithHelp("x", "request changes"))
+
+	openAddReviewer = key.NewBinding(
+		key.WithKeys("r"),
+		key.WithHelp("r", "add reviewer"))
+
+	openAddAssignee = key.NewBinding(
+		key.WithKeys("A"),
+		key.WithHelp("A", "add assignee"))
 
 	fullHelp = [][]key.Binding{{}, {}}
 )
@@ -86,9 +95,10 @@ func NewModel(pr api.PullRequestResponse, ctx *components.Context) *Model {
 		log.Fatal(err)
 	}
 	m.diff = diff.String()
-	fullHelp = [][]key.Binding{{components.DefaultKeyMap.Up, components.DefaultKeyMap.Down, showComments, openMerge}, {openComment, openApprove, openRequestChanges}, {m.viewport.KeyMap.PageDown, m.viewport.KeyMap.PageUp, m.viewport.KeyMap.HalfPageUp, m.viewport.KeyMap.HalfPageDown}}
+	fullHelp = [][]key.Binding{{components.DefaultKeyMap.Up, components.DefaultKeyMap.Down, showComments, openMerge}, {openComment, openApprove, openRequestChanges}, {openAddReviewer, openAddAssignee}, {m.viewport.KeyMap.PageDown, m.viewport.KeyMap.PageUp, m.viewport.KeyMap.HalfPageUp, m.viewport.KeyMap.HalfPageDown}}
 	m.mergeDialog = *components.NewMergeDialogModel(ctx, pr)
 	m.reviewDialog = *components.NewReviewDialogModel(ctx, pr)
+	m.inputDialog = *components.NewInputDialogModel(ctx, pr)
 	return &m
 }
 
@@ -130,6 +140,22 @@ func (m Model) Update(msg tea.Msg) (components.Page, tea.Cmd) {
 		cmds = append(cmds, rdCmd)
 		return &m, tea.Batch(cmds...)
 	}
+	if m.inputDialog.Focused() {
+		m.isInTextInput = true
+		if msg, ok := msg.(tea.KeyMsg); ok {
+			if key.Matches(msg, components.DefaultKeyMap.Exit) {
+				m.inputDialog.Blur()
+				m.isInTextInput = false
+				return &m, nil
+			}
+		} else {
+			m.isInTextInput = true
+		}
+		id, idCmd := m.inputDialog.Update(msg)
+		m.inputDialog = *id.(*components.InputDialogModel)
+		cmds = append(cmds, idCmd)
+		return &m, tea.Batch(cmds...)
+	}
 	m.isInTextInput = false
 	switch msg := msg.(type) {
 	case api.MergeResult:
@@ -144,6 +170,20 @@ func (m Model) Update(msg tea.Msg) (components.Page, tea.Cmd) {
 			m.pullRequest = msg.PR
 		} else {
 			m.context.StatusText = "Failed to refresh PR: " + msg.Error.Error()
+		}
+	case api.AssigneeResult:
+		if msg.Success {
+			m.context.StatusText = "Successfully added assignee"
+			cmds = append(cmds, api.GetPullRequestCmd(msg.PR.Repository.NameWithOwner, msg.PR.Number))
+		} else {
+			m.context.StatusText = fmt.Sprintf("Failed to add assignee: %v", msg.Error)
+		}
+	case api.ReviewerResult:
+		if msg.Success {
+			m.context.StatusText = "Successfully added reviewer"
+			cmds = append(cmds, api.GetPullRequestCmd(msg.PR.Repository.NameWithOwner, msg.PR.Number))
+		} else {
+			m.context.StatusText = fmt.Sprintf("Failed to add reviewer: %v", msg.Error)
 		}
 	case api.ReviewResult:
 		if msg.Success {
@@ -184,6 +224,12 @@ func (m Model) Update(msg tea.Msg) (components.Page, tea.Cmd) {
 		case key.Matches(msg, openRequestChanges):
 			m.reviewDialog.FocusWithMode(components.ReviewModeRequestChanges)
 			m.isInTextInput = true
+		case key.Matches(msg, openAddReviewer):
+			m.inputDialog.FocusWithType(components.InputDialogReviewer)
+			m.isInTextInput = true
+		case key.Matches(msg, openAddAssignee):
+			m.inputDialog.FocusWithType(components.InputDialogAssignee)
+			m.isInTextInput = true
 		case key.Matches(msg, components.DefaultKeyMap.Up):
 			if m.viewport.AtTop() {
 				cmds = append(cmds, m.Blur)
@@ -223,6 +269,11 @@ func (m Model) View() string {
 		width, _, _ := term.GetSize(int(os.Stdout.Fd()))
 		vc := m.context.ViewportHeight / 2
 		body = components.RenderOverlay(m.reviewDialog.View(), body, width/4, vc)
+	}
+	if m.inputDialog.Focused() {
+		width, _, _ := term.GetSize(int(os.Stdout.Fd()))
+		vc := m.context.ViewportHeight / 2
+		body = components.RenderOverlay(m.inputDialog.View(), body, width/4, vc)
 	}
 	return body
 }

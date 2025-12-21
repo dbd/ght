@@ -214,7 +214,22 @@ func formatHeader(pr api.PullRequestResponse) string {
 	doc.WriteString(components.PrTitleStyle.Render(pr.Title) + "\n")
 	doc.WriteString(pr.Author.Login + " · " + pr.BaseRefName + " ← " + pr.HeadRefName + "\n")
 	doc.WriteString(strconv.FormatInt(pr.Number, 10) + " · " + pr.Repository.NameWithOwner + " | " + ad + "\n")
+	assignees := formatAssignees(pr)
+	if assignees != "" {
+		doc.WriteString("Assignees: " + assignees + "\n")
+	}
 	doc.WriteString("Reviewers: " + formatReviewers(pr) + "\n")
+	return doc.String()
+}
+
+func formatAssignees(pr api.PullRequestResponse) string {
+	doc := strings.Builder{}
+	for i, assignee := range pr.Assignees.Nodes {
+		if i > 0 {
+			doc.WriteString(", ")
+		}
+		doc.WriteString(components.BoldStyle.Render(assignee.Login))
+	}
 	return doc.String()
 }
 
