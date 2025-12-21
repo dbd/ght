@@ -130,3 +130,63 @@ func splitRepo(repo string) []string {
 	}
 	return []string{"", repo}
 }
+
+type ReviewAction string
+
+const (
+	ReviewActionComment        ReviewAction = "comment"
+	ReviewActionApprove        ReviewAction = "approve"
+	ReviewActionRequestChanges ReviewAction = "request-changes"
+)
+
+type ReviewResult struct {
+	Success bool
+	Error   error
+	Action  ReviewAction
+	PR      PullRequestResponse
+}
+
+func SubmitReviewCmd(pr PullRequestResponse, action ReviewAction, body string) tea.Cmd {
+	return func() tea.Msg {
+		args := []string{"pr", "review", "--repo", pr.Repository.NameWithOwner}
+
+		switch action {
+		case ReviewActionComment:
+			args = append(args, "--comment")
+		case ReviewActionApprove:
+			args = append(args, "--approve")
+		case ReviewActionRequestChanges:
+			args = append(args, "--request-changes")
+		}
+
+		if body != "" {
+			args = append(args, "--body", body)
+		}
+
+		args = append(args, pr.HeadRefName)
+
+		_, _, err := gh.Exec(args...)
+		if err != nil {
+			return ReviewResult{Success: false, Error: err, Action: action, PR: pr}
+		}
+		return ReviewResult{Success: true, Error: nil, Action: action, PR: pr}
+	}
+}
+
+type CommentResult struct {
+	Success bool
+	Error   error
+	PR      PullRequestResponse
+}
+
+func AddCommentCmd(pr PullRequestResponse, body string) tea.Cmd {
+	return func() tea.Msg {
+		args := []string{"pr", "comment", "--repo", pr.Repository.NameWithOwner, "--body", body, pr.HeadRefName}
+
+		_, _, err := gh.Exec(args...)
+		if err != nil {
+			return CommentResult{Success: false, Error: err, PR: pr}
+		}
+		return CommentResult{Success: true, Error: nil, PR: pr}
+	}
+}
