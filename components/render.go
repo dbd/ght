@@ -60,6 +60,11 @@ func RenderFilter(body, background string, x, y, width int) string {
 
 }
 
+func RenderOverlay(body, background string, x, y int) string {
+	rbg := BackgroundStyle.Render(stripansi.Strip(background))
+	return PlaceOverlay(x, y, body, rbg)
+}
+
 func RenderColoredText(text, cs string) string {
 	cm := map[string]lipgloss.Color{
 		"black":    Black,
