@@ -30,9 +30,9 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 		case key.Matches(msg, m.context.KeyMap.Help):
 			m.page.ToggleHelp()
 			cmds = append(cmds, m.page.ToggleHelp)
-		case key.Matches(msg, components.DefaultKeyMap.Close):
+		case key.Matches(msg, components.DefaultKeyMap.Close) && !m.IsInTextInput():
 			cmds = append(cmds, m.page.Blur)
-		case key.Matches(msg, m.context.KeyMap.Exit):
+		case key.Matches(msg, m.context.KeyMap.Exit) && !m.IsInTextInput():
 			return m, tea.Quit
 		}
 	}
@@ -53,4 +53,8 @@ func (m Model) Init() tea.Cmd {
 
 func (m Model) IsInTextInput() bool {
 	return m.page.IsInTextInput()
+}
+
+func (m Model) GetPage() components.Page {
+	return m.page
 }

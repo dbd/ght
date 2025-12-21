@@ -4,6 +4,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/textarea"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -94,7 +95,7 @@ func (m ReviewDialogModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch {
-		case msg.Type == tea.KeyCtrlS:
+		case key.Matches(msg, DefaultKeyMap.Submit):
 			body := strings.TrimSpace(m.textarea.Value())
 
 			if m.mode == ReviewModeComment {
