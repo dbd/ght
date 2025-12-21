@@ -194,3 +194,39 @@ func AddCommentCmd(pr PullRequestResponse, body string) tea.Cmd {
 		return CommentResult{Success: true, Error: nil, PR: pr}
 	}
 }
+
+type AssigneeResult struct {
+	Success bool
+	Error   error
+	PR      PullRequestResponse
+}
+
+func AddAssigneeCmd(pr PullRequestResponse, username string) tea.Cmd {
+	return func() tea.Msg {
+		args := []string{"pr", "edit", "--repo", pr.Repository.NameWithOwner, "--add-assignee", username, pr.HeadRefName}
+
+		_, _, err := gh.Exec(args...)
+		if err != nil {
+			return AssigneeResult{Success: false, Error: err, PR: pr}
+		}
+		return AssigneeResult{Success: true, Error: nil, PR: pr}
+	}
+}
+
+type ReviewerResult struct {
+	Success bool
+	Error   error
+	PR      PullRequestResponse
+}
+
+func AddReviewerCmd(pr PullRequestResponse, username string) tea.Cmd {
+	return func() tea.Msg {
+		args := []string{"pr", "edit", "--repo", pr.Repository.NameWithOwner, "--add-reviewer", username, pr.HeadRefName}
+
+		_, _, err := gh.Exec(args...)
+		if err != nil {
+			return ReviewerResult{Success: false, Error: err, PR: pr}
+		}
+		return ReviewerResult{Success: true, Error: nil, PR: pr}
+	}
+}

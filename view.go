@@ -68,6 +68,11 @@ func (m Model) View() string {
 		vc := m.viewport.Height/2 - lipgloss.Height(m.headerView())
 		body = components.RenderHelpBox(m.context.Help.FullHelpView(fullHelp), body, width, vc, 0)
 	}
+	if m.helpDialog.Focused() {
+		width, _, _ := term.GetSize(int(os.Stdout.Fd()))
+		vc := m.viewport.Height / 2
+		body = components.RenderOverlay(m.helpDialog.View(), body, width/4, vc)
+	}
 
 	return fmt.Sprintf("%s\n%s\n%s", m.headerView(), body, m.footerView())
 }

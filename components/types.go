@@ -42,3 +42,25 @@ type CmdNewTab struct {
 type CmdSaveTab struct {
 	Name string
 }
+
+type CmdAddAssignee struct {
+	Username string
+}
+
+type CmdAddReviewer struct {
+	Username string
+}
+
+type CmdComment struct {
+	Body string
+}
+
+type CmdApprove struct {
+	Body string
+}
+
+type CmdRequestChanges struct {
+	Body string
+}
+
+type CmdHelp struct{}

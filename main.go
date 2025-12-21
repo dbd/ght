@@ -18,15 +18,16 @@ import (
 )
 
 type Model struct {
-	Tabs      []tab.Model
-	activeTab int
-	config    components.Config
-	viewport  viewport.Model
-	ready     bool
-	context   *components.Context
-	command   textinput.Model
-	focused   bool
-	showHelp  bool
+	Tabs       []tab.Model
+	activeTab  int
+	config     components.Config
+	viewport   viewport.Model
+	ready      bool
+	context    *components.Context
+	command    textinput.Model
+	focused    bool
+	showHelp   bool
+	helpDialog components.HelpDialogModel
 }
 
 var fullHelp = [][]key.Binding{
@@ -63,6 +64,7 @@ func initializeModel() Model {
 		tabs = append(tabs, t)
 	}
 	m.Tabs = tabs
+	m.helpDialog = *components.NewHelpDialogModel(&ctx)
 	return m
 }
 
