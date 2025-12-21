@@ -21,16 +21,17 @@ import (
 )
 
 type Model struct {
-	context      *components.Context
-	pullRequest  api.PullRequestResponse
-	mergeDialog  components.MergeDialogModel
-	reviewDialog components.ReviewDialogModel
-	viewport     viewport.Model
-	ready        bool
-	showComments bool
-	paginator    paginator.Model
-	diff         string
-	showHelp     bool
+	context       *components.Context
+	pullRequest   api.PullRequestResponse
+	mergeDialog   components.MergeDialogModel
+	reviewDialog  components.ReviewDialogModel
+	viewport      viewport.Model
+	ready         bool
+	showComments  bool
+	paginator     paginator.Model
+	diff          string
+	showHelp      bool
+	isInTextInput bool
 }
 
 var (
@@ -69,6 +70,7 @@ func NewModel(pr api.PullRequestResponse, ctx *components.Context) *Model {
 	m.viewport = viewport.New(m.context.ViewportWidth, m.context.ViewportHeight-1)
 	m.viewport.SetContent(RenderPullRequestDetail(m.pullRequest, ctx.ViewportWidth-2))
 	m.viewport.YPosition = m.context.ViewportYPosition
+	m.isInTextInput = false
 	m.ready = true
 
 	p := paginator.New()
@@ -97,11 +99,15 @@ func (m Model) Update(msg tea.Msg) (components.Page, tea.Cmd) {
 	p, pCmd := m.paginator.Update(msg)
 	m.paginator = p
 	if m.mergeDialog.Focused() {
+		m.isInTextInput = true
 		if msg, ok := msg.(tea.KeyMsg); ok {
-			if key.Matches(msg, components.DefaultKeyMap.Exit) || msg.String() == "q" {
+			if key.Matches(msg, components.DefaultKeyMap.Exit) {
 				m.mergeDialog.Blur()
+				m.isInTextInput = false
 				return &m, nil
 			}
+		} else {
+			m.isInTextInput = true
 		}
 		md, mdCmd := m.mergeDialog.Update(msg)
 		m.mergeDialog = *md.(*components.MergeDialogModel)
@@ -109,17 +115,22 @@ func (m Model) Update(msg tea.Msg) (components.Page, tea.Cmd) {
 		return &m, tea.Batch(cmds...)
 	}
 	if m.reviewDialog.Focused() {
+		m.isInTextInput = true
 		if msg, ok := msg.(tea.KeyMsg); ok {
 			if key.Matches(msg, components.DefaultKeyMap.Exit) {
 				m.reviewDialog.Blur()
+				m.isInTextInput = false
 				return &m, nil
 			}
+		} else {
+			m.isInTextInput = true
 		}
 		rd, rdCmd := m.reviewDialog.Update(msg)
 		m.reviewDialog = *rd.(*components.ReviewDialogModel)
 		cmds = append(cmds, rdCmd)
 		return &m, tea.Batch(cmds...)
 	}
+	m.isInTextInput = false
 	switch msg := msg.(type) {
 	case api.MergeResult:
 		if msg.Success {
@@ -163,12 +174,16 @@ func (m Model) Update(msg tea.Msg) (components.Page, tea.Cmd) {
 			m.showComments = !m.showComments
 		case key.Matches(msg, openMerge):
 			m.mergeDialog.Focus()
+			m.isInTextInput = true
 		case key.Matches(msg, openComment):
 			m.reviewDialog.FocusWithMode(components.ReviewModeComment)
+			m.isInTextInput = true
 		case key.Matches(msg, openApprove):
 			m.reviewDialog.FocusWithMode(components.ReviewModeApprove)
+			m.isInTextInput = true
 		case key.Matches(msg, openRequestChanges):
 			m.reviewDialog.FocusWithMode(components.ReviewModeRequestChanges)
+			m.isInTextInput = true
 		case key.Matches(msg, components.DefaultKeyMap.Up):
 			if m.viewport.AtTop() {
 				cmds = append(cmds, m.Blur)
@@ -288,5 +303,5 @@ func (m *Model) ToggleHelp() tea.Msg {
 }
 
 func (m *Model) IsInTextInput() bool {
-	return false
+	return m.isInTextInput
 }

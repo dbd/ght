@@ -105,12 +105,21 @@ func (m Model) Update(msg tea.Msg) (components.Page, tea.Cmd) {
 		}
 	case tea.KeyMsg:
 		if m.filter.Focused() {
+			if key.Matches(msg, m.context.KeyMap.Exit) {
+				m.filter.Blur()
+				break
+			}
 			filter, cmd := m.filter.Update(msg)
 			cmds = append(cmds, cmd)
 			m.filter = filter
 			if key.Matches(msg, m.context.KeyMap.Enter) {
 				m.filter.Blur()
-				m.table.SetRows(m.filteredRows())
+				newQuery := m.filter.Value()
+				if newQuery != "" {
+					m.query = newQuery
+					m.context.StatusText = fetchingStatus
+					cmds = append(cmds, api.GetPullRequestsCmd(m.query))
+				}
 				break
 			}
 			break
@@ -120,10 +129,7 @@ func (m Model) Update(msg tea.Msg) (components.Page, tea.Cmd) {
 			cmds = append(cmds, m.openPR(m.table.SelectedRow()))
 		case key.Matches(msg, m.context.KeyMap.Filter):
 			m.filter.Focus()
-		case key.Matches(msg, m.context.KeyMap.Up):
-			if m.table.Cursor() == 0 {
-				cmds = append(cmds, m.Blur)
-			}
+			m.filter.Placeholder = "Enter GitHub search query..."
 		case key.Matches(msg, m.context.KeyMap.Up):
 			if m.table.Cursor() == 0 {
 				cmds = append(cmds, m.Blur)
@@ -200,6 +206,10 @@ func (m Model) openPR(row table.Row) tea.Cmd {
 	return func() tea.Msg {
 		return OpenPR{PR: pr}
 	}
+}
+
+func (m *Model) GetQuery() string {
+	return m.query
 }
 
 func (m Model) filteredRows() []table.Row {

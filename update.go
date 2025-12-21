@@ -10,6 +10,7 @@ import (
 	"github.com/dbd/ght/components/pullRequestDetail"
 	"github.com/dbd/ght/components/pullRequestSearch"
 	"github.com/dbd/ght/components/tab"
+	"github.com/dbd/ght/internal/api"
 )
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -35,6 +36,30 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	case components.Blur:
 		m.focused = true
+	case components.CmdNewTab:
+		t := tab.NewModel(m.context, "New Search", pullRequestSearch.NewModel([]api.PullRequestResponse{}, "", m.context))
+		m.Tabs = append(m.Tabs, t)
+		m.activeTab = len(m.Tabs) - 1
+		m.focused = true
+	case components.CmdSaveTab:
+		activeTab := m.Tabs[m.activeTab]
+		if searchPage, ok := activeTab.GetPage().(*pullRequestSearch.Model); ok {
+			query := searchPage.GetQuery()
+			if query == "" {
+				m.context.StatusText = "Cannot save tab: no query set"
+			} else {
+				err := components.SaveSearch(msg.Name, query)
+				if err != nil {
+					m.context.StatusText = fmt.Sprintf("Failed to save search: %v", err)
+				} else {
+					m.context.StatusText = fmt.Sprintf("Saved search '%s'", msg.Name)
+					// Update tab name
+					m.Tabs[m.activeTab].Name = msg.Name
+				}
+			}
+		} else {
+			m.context.StatusText = "Cannot save tab: not a search tab"
+		}
 	case tea.WindowSizeMsg:
 		headerHeight := lipgloss.Height(m.headerView())
 		footerHeight := lipgloss.Height(m.footerView())
@@ -80,10 +105,14 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			switch {
 			case key.Matches(msg, m.context.KeyMap.Help):
 				m.showHelp = !m.showHelp
+			case key.Matches(msg, m.context.KeyMap.Exit):
+				if m.showHelp {
+					m.showHelp = false
+				} else {
+					return m, tea.Quit
+				}
 			case key.Matches(msg, m.context.KeyMap.Down):
 				m.focused = false
-			case key.Matches(msg, m.context.KeyMap.Exit):
-				return m, tea.Quit
 			case key.Matches(msg, m.context.KeyMap.Close):
 				var tt []tab.Model
 				for counter, tab := range m.Tabs {

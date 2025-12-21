@@ -34,3 +34,11 @@ type CmdMerge struct {
 }
 
 type CmdRefresh struct{}
+
+type CmdNewTab struct {
+	Query string
+}
+
+type CmdSaveTab struct {
+	Name string
+}

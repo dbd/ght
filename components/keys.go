@@ -16,6 +16,7 @@ type KeyMap struct {
 	Filter  key.Binding
 	Suspend key.Binding
 	Leader  key.Binding
+	Submit  key.Binding
 }
 
 func (k KeyMap) ShortHelp() []key.Binding {
@@ -51,7 +52,7 @@ var DefaultKeyMap = KeyMap{
 		key.WithHelp("q/^w", "close the highlighted tab"),
 	),
 	Exit: key.NewBinding(
-		key.WithKeys("escape", "ctrl+c"),
+		key.WithKeys("esc", "ctrl+c"),
 		key.WithHelp("ESC/^c", "exit the application"),
 	),
 	Enter: key.NewBinding(
@@ -73,5 +74,9 @@ var DefaultKeyMap = KeyMap{
 	Leader: key.NewBinding(
 		key.WithKeys(":"),
 		key.WithHelp(":", "leader"),
+	),
+	Submit: key.NewBinding(
+		key.WithKeys("ctrl+s"),
+		key.WithHelp("^s", "submit"),
 	),
 }
