@@ -23,6 +23,7 @@ import (
 type Model struct {
 	context      *components.Context
 	pullRequest  api.PullRequestResponse
+	mergeDialog  components.MergeDialogModel
 	viewport     viewport.Model
 	ready        bool
 	showComments bool
@@ -35,6 +36,10 @@ var (
 	showComments = key.NewBinding(
 		key.WithKeys("c"),
 		key.WithHelp("c", "show comments"))
+
+	openMerge = key.NewBinding(
+		key.WithKeys("m"),
+		key.WithHelp("m", "merge PR"))
 
 	fullHelp = [][]key.Binding{{}, {}}
 )
@@ -66,8 +71,8 @@ func NewModel(pr api.PullRequestResponse, ctx *components.Context) *Model {
 		log.Fatal(err)
 	}
 	m.diff = diff.String()
-	fullHelp = [][]key.Binding{{components.DefaultKeyMap.Up, components.DefaultKeyMap.Down, components.DefaultKeyMap.Enter, showComments}, {m.viewport.KeyMap.PageDown, m.viewport.KeyMap.PageUp, m.viewport.KeyMap.HalfPageUp, m.viewport.KeyMap.HalfPageDown}}
-
+	fullHelp = [][]key.Binding{{components.DefaultKeyMap.Up, components.DefaultKeyMap.Down, components.DefaultKeyMap.Enter, showComments, openMerge}, {m.viewport.KeyMap.PageDown, m.viewport.KeyMap.PageUp, m.viewport.KeyMap.HalfPageUp, m.viewport.KeyMap.HalfPageDown}}
+	m.mergeDialog = *components.NewMergeDialogModel(ctx, pr)
 	return &m
 }
 
@@ -77,11 +82,37 @@ func (m Model) Update(msg tea.Msg) (components.Page, tea.Cmd) {
 	m.viewport.Height = m.context.ViewportHeight - 1
 	p, pCmd := m.paginator.Update(msg)
 	m.paginator = p
+	if m.mergeDialog.Focused() {
+		md, mdCmd := m.mergeDialog.Update(msg)
+		m.mergeDialog = *md.(*components.MergeDialogModel)
+		cmds = append(cmds, mdCmd)
+		if msg, ok := msg.(tea.KeyMsg); ok {
+			if key.Matches(msg, components.DefaultKeyMap.Exit) {
+				m.mergeDialog.Blur()
+			}
+		}
+		return &m, tea.Batch(cmds...)
+	}
 	switch msg := msg.(type) {
+	case api.MergeResult:
+		if msg.Success {
+			m.context.StatusText = "Successfully merged PR #" + strconv.FormatInt(msg.PR.Number, 10)
+			cmds = append(cmds, api.GetPullRequestCmd(msg.PR.Repository.NameWithOwner, msg.PR.Number))
+		} else {
+			m.context.StatusText = "Merge failed: " + msg.Error.Error()
+		}
+	case api.PullRequestRefresh:
+		if msg.Error == nil {
+			m.pullRequest = msg.PR
+		} else {
+			m.context.StatusText = "Failed to refresh PR: " + msg.Error.Error()
+		}
 	case tea.KeyMsg:
 		switch {
 		case key.Matches(msg, showComments):
 			m.showComments = !m.showComments
+		case key.Matches(msg, openMerge):
+			m.mergeDialog.Focus()
 		case key.Matches(msg, components.DefaultKeyMap.Up):
 			if m.viewport.AtTop() {
 				cmds = append(cmds, m.Blur)
@@ -111,6 +142,12 @@ func (m Model) View() string {
 		vc := height / 2
 
 		body = components.RenderHelpBox(m.context.Help.FullHelpView(fullHelp), body, width, vc, 0)
+	}
+	if m.mergeDialog.Focused() {
+		width, _, _ := term.GetSize(int(os.Stdout.Fd()))
+		width = width / 2
+		vc := m.context.ViewportHeight / 2
+		body = components.RenderFilter(m.mergeDialog.View(), body, width, vc, width/2)
 	}
 	return body
 }

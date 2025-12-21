@@ -26,3 +26,11 @@ type Page interface {
 	ToggleHelp() tea.Msg
 	IsInTextInput() bool
 }
+
+type CmdMerge struct {
+	Org           string
+	Repo          string
+	PullRequestId int
+}
+
+type CmdRefresh struct{}

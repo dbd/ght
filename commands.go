@@ -4,19 +4,12 @@ import (
 	"fmt"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/dbd/ght/components"
 )
 
-type CmdMerge struct {
-	Org           string
-	Repo          string
-	PullRequestId int
-}
-
-type CmdRefresh struct{}
-
 var cmdMap = map[string]interface{}{
-	"merge":   CmdMerge{},
-	"refresh": CmdRefresh{},
+	"merge":   components.CmdMerge{},
+	"refresh": components.CmdRefresh{},
 }
 
 func (m Model) sendCommandMessage(command string) tea.Cmd {
@@ -26,9 +19,9 @@ func (m Model) sendCommandMessage(command string) tea.Cmd {
 		return nil
 	}
 	switch msg := msg.(type) {
-	case CmdMerge:
+	case components.CmdMerge:
 		m.context.StatusText = fmt.Sprintf("Merge Command, %s", msg.Org)
-		return func() tea.Msg { return CmdMerge{} }
+		return func() tea.Msg { return components.CmdMerge{} }
 
 	}
 	return nil
