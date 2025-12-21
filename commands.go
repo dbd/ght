@@ -40,6 +40,8 @@ func (m Model) sendCommandMessage(command string) tea.Cmd {
 			return nil
 		}
 		return func() tea.Msg { return components.CmdSaveTab{Name: cmdArg} }
+	case components.CmdRefresh:
+		return func() tea.Msg { return components.CmdRefresh{} }
 	}
 	return nil
 }
