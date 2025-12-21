@@ -60,6 +60,23 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		} else {
 			m.context.StatusText = "Cannot save tab: not a search tab"
 		}
+	case components.CmdRefresh:
+		activeTab := m.Tabs[m.activeTab]
+		if searchPage, ok := activeTab.GetPage().(*pullRequestSearch.Model); ok {
+			query := searchPage.GetQuery()
+			if query == "" {
+				m.context.StatusText = "Cannot refresh: no query set"
+			} else {
+				m.context.StatusText = "Refreshing search..."
+				cmds = append(cmds, api.GetPullRequestsCmd(query))
+			}
+		} else if prPage, ok := activeTab.GetPage().(*pullRequestDetail.Model); ok {
+			pr := prPage.GetPullRequest()
+			m.context.StatusText = "Refreshing PR..."
+			cmds = append(cmds, api.GetPullRequestCmd(pr.Repository.NameWithOwner, pr.Number))
+		} else {
+			m.context.StatusText = "Cannot refresh this tab type"
+		}
 	case tea.WindowSizeMsg:
 		headerHeight := lipgloss.Height(m.headerView())
 		footerHeight := lipgloss.Height(m.footerView())

@@ -305,3 +305,7 @@ func (m *Model) ToggleHelp() tea.Msg {
 func (m *Model) IsInTextInput() bool {
 	return m.isInTextInput
 }
+
+func (m *Model) GetPullRequest() api.PullRequestResponse {
+	return m.pullRequest
+}
