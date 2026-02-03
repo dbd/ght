@@ -64,3 +64,5 @@ type CmdRequestChanges struct {
 }
 
 type CmdHelp struct{}
+
+type CmdQuit struct{}

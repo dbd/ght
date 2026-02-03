@@ -19,6 +19,7 @@ var cmdMap = map[string]interface{}{
 	"approve":         components.CmdApprove{},
 	"request-changes": components.CmdRequestChanges{},
 	"help":            components.CmdHelp{},
+	"quit":            components.CmdQuit{},
 }
 
 func (m Model) sendCommandMessage(command string) tea.Cmd {
@@ -31,8 +32,22 @@ func (m Model) sendCommandMessage(command string) tea.Cmd {
 
 	msg, ok := cmdMap[cmdName]
 	if !ok {
-		m.context.StatusText = fmt.Sprintf("Unknown command: %s", cmdName)
-		return nil
+		count := 0
+		for key, _ := range cmdMap {
+			if strings.HasPrefix(key, cmdName) {
+				msg = cmdMap[key]
+				ok = true
+				count += 1
+			}
+		}
+		if count > 1 {
+			m.context.StatusText = fmt.Sprintf("Ambiguous command: %s", cmdName)
+			return nil
+		}
+		if !ok {
+			m.context.StatusText = fmt.Sprintf("Unknown command: %s", cmdName)
+			return nil
+		}
 	}
 	switch msg.(type) {
 	case components.CmdMerge:
@@ -75,6 +90,8 @@ func (m Model) sendCommandMessage(command string) tea.Cmd {
 		return func() tea.Msg { return components.CmdRequestChanges{Body: cmdArg} }
 	case components.CmdHelp:
 		return func() tea.Msg { return components.CmdHelp{} }
+	case components.CmdQuit:
+		return func() tea.Msg { return components.CmdQuit{} }
 	}
 	return nil
 }

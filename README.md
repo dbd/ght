@@ -20,12 +20,32 @@ Built with [Bubble Tea](https://github.com/charmbracelet/bubbletea) and the [Git
 ### Prerequisites
 
 - [GitHub CLI (`gh`)](https://cli.github.com/) - Must be installed and authenticated
-- Go 1.21+ (for building from source)
+- Go 1.21+ (for installation)
+
+### Using go install (Recommended)
+
+```bash
+go install github.com/dbd/ght@latest
+```
+
+This installs the `ght` binary to `$GOPATH/bin` (usually `~/go/bin`).
+
+**Standard Go installation:**
+Make sure `$GOPATH/bin` is in your PATH:
+```bash
+export PATH="$HOME/go/bin:$PATH"
+```
+
+**If using asdf:**
+Add asdf's Go packages bin to your PATH:
+```bash
+export PATH="$HOME/.asdf/installs/golang/$(asdf current golang | awk '{print $2}')/packages/bin:$PATH"
+```
 
 ### From Source
 
 ```bash
-git clone https://github.com/yourusername/ght.git
+git clone https://github.com/dbd/ght.git
 cd ght
 go build
 ./ght

@@ -71,7 +71,8 @@ func (m Model) View() string {
 	if m.helpDialog.Focused() {
 		width, _, _ := term.GetSize(int(os.Stdout.Fd()))
 		vc := m.viewport.Height / 2
-		body = components.RenderOverlay(m.helpDialog.View(), body, width/4, vc)
+		hc := width / 2
+		body = components.RenderCenteredOverlay(m.helpDialog.View(), body, hc, vc)
 	}
 
 	return fmt.Sprintf("%s\n%s\n%s", m.headerView(), body, m.footerView())

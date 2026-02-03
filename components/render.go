@@ -65,6 +65,13 @@ func RenderOverlay(body, background string, x, y int) string {
 	return PlaceOverlay(x, y, body, rbg)
 }
 
+func RenderCenteredOverlay(body, background string, x, y int) string {
+	xOffset := lipgloss.Width(body) / 2
+	yOffset := lipgloss.Height(body) / 2
+	rbg := BackgroundStyle.Render(stripansi.Strip(background))
+	return PlaceOverlay(x-xOffset, y-yOffset, body, rbg)
+}
+
 func RenderColoredText(text, cs string) string {
 	cm := map[string]lipgloss.Color{
 		"black":    Black,

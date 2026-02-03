@@ -17,6 +17,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
 	activeTab := m.Tabs[m.activeTab]
 	switch msg := msg.(type) {
+	case components.CmdQuit:
+		return m, tea.Quit
 	case pullRequestSearch.OpenPR:
 		var alreadyOpened bool
 		for counter, tab := range m.Tabs {
