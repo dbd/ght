@@ -178,8 +178,55 @@ type AssignedEvent struct {
 }
 
 type ClosedEvent struct {
-	Actor     Actor
-	CreatedAt Timestamp
+	Actor       Actor
+	CreatedAt   Timestamp
+	StateReason string
+	Closer      IssueCloser
+}
+
+// IssueCloser is the union Closer = Commit | PullRequest on ClosedEvent.
+type IssueCloser struct {
+	Type        string          `graphql:"__typename"`
+	PullRequest IssueCloserPR   `graphql:"... on PullRequest"`
+	Commit      IssueCloserCommit `graphql:"... on Commit"`
+}
+
+type IssueCloserPR struct {
+	Number     int64
+	Title      string
+	Repository Repository
+}
+
+type IssueCloserCommit struct {
+	AbbreviatedOid string
+	Message        string
+}
+
+// CrossReferencedEvent fires when an issue/PR is mentioned from another issue/PR.
+type CrossReferencedEvent struct {
+	Actor           Actor
+	CreatedAt       Timestamp
+	WillCloseTarget bool
+	Source          CrossReferenceSource
+}
+
+type CrossReferenceSource struct {
+	Type        string             `graphql:"__typename"`
+	PullRequest CrossReferencePR   `graphql:"... on PullRequest"`
+	Issue       CrossReferenceIssue `graphql:"... on Issue"`
+}
+
+type CrossReferencePR struct {
+	Number     int64
+	Title      string
+	State      string
+	Repository Repository
+}
+
+type CrossReferenceIssue struct {
+	Number     int64
+	Title      string
+	Repository Repository
 }
 
 type LabeledEvent struct {
@@ -351,6 +398,113 @@ type Comment struct {
 type LineRange struct {
 	StartLine int64
 	EndLine   int64
+}
+
+// Issue types
+
+type Issues struct {
+	Query  string
+	Issues []IssueResponse
+	Error  error
+}
+
+type IssueRefresh struct {
+	Issue IssueResponse
+	Error error
+}
+
+type IssueResponse struct {
+	ID            string
+	Number        int64
+	Title         string
+	Body          string
+	State         string
+	Author        Actor
+	CreatedAt     Timestamp
+	UpdatedAt     Timestamp
+	Repository    Repository
+	Labels        Labels        `graphql:"labels(first: 10)"`
+	Assignees     Assignees     `graphql:"assignees(first: 3)"`
+	Milestone     *IssueMilestone
+	TimelineItems IssueTimelineItems `graphql:"timelineItems(first: 30)"`
+	Comments      IssueComments      `graphql:"comments(last: 20, orderBy: { field: UPDATED_AT, direction: DESC })"`
+}
+
+type IssueMilestone struct {
+	Number      int64
+	Title       string
+	State       string
+	Description string
+	DueOn       Timestamp
+}
+
+type IssueTimelineItems struct {
+	Nodes []IssueTimelineItem
+}
+
+type IssueTimelineItem struct {
+	Type                 string               `graphql:"__typename"`
+	IssueComment         IssueComment         `graphql:"... on IssueComment"`
+	AssignedEvent        AssignedEvent        `graphql:"... on AssignedEvent"`
+	UnassignedEvent      AssignedEvent        `graphql:"... on UnassignedEvent"`
+	LabeledEvent         LabeledEvent         `graphql:"... on LabeledEvent"`
+	UnlabeledEvent       LabeledEvent         `graphql:"... on UnlabeledEvent"`
+	ClosedEvent          ClosedEvent          `graphql:"... on ClosedEvent"`
+	ReopenedEvent        ReopenedEvent        `graphql:"... on ReopenedEvent"`
+	RenamedTitleEvent    RenamedTitleEvent    `graphql:"... on RenamedTitleEvent"`
+	MilestonedEvent      MilestonedEvent      `graphql:"... on MilestonedEvent"`
+	DemilestonedEvent    DemilestonedEvent    `graphql:"... on DemilestonedEvent"`
+	CrossReferencedEvent CrossReferencedEvent `graphql:"... on CrossReferencedEvent"`
+}
+
+type MilestonedEvent struct {
+	Actor          Actor
+	CreatedAt      Timestamp
+	MilestoneTitle string
+}
+
+type DemilestonedEvent struct {
+	Actor          Actor
+	CreatedAt      Timestamp
+	MilestoneTitle string
+}
+
+// Milestone types
+
+type Milestones struct {
+	Repo       string
+	Milestones []MilestoneListResponse
+	Error      error
+}
+
+type MilestoneRefresh struct {
+	Milestone MilestoneResponse
+	Error     error
+}
+
+type MilestoneListResponse struct {
+	Number       int64
+	Title        string
+	State        string
+	DueOn        Timestamp
+	OpenIssues   MilestoneIssues `graphql:"openIssues: issues(first: 1, states: [OPEN])"`
+	ClosedIssues MilestoneIssues `graphql:"closedIssues: issues(first: 1, states: [CLOSED])"`
+}
+
+type MilestoneResponse struct {
+	Number       int64
+	Title        string
+	State        string
+	Description  string
+	DueOn        Timestamp
+	OpenIssues   MilestoneIssues `graphql:"openIssues: issues(first: 1, states: [OPEN])"`
+	ClosedIssues MilestoneIssues `graphql:"closedIssues: issues(first: 1, states: [CLOSED])"`
+	Issues       MilestoneIssues `graphql:"issues(first: 50, states: [OPEN, CLOSED])"`
+}
+
+type MilestoneIssues struct {
+	TotalCount int
+	Nodes      []IssueResponse
 }
 
 type Timestamp string

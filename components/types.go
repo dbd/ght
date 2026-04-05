@@ -66,3 +66,18 @@ type CmdRequestChanges struct {
 type CmdHelp struct{}
 
 type CmdQuit struct{}
+
+type CmdSwitchMode struct{ Mode string }
+
+type CmdMilestones struct{ Repo string }
+
+type CmdNewIssueTab struct{}
+
+type OpenMilestoneByNumber struct {
+	Repo   string
+	Number int64
+}
+
+type IssueSetupNeeded struct{}
+
+type IssueConfigCreated struct{}

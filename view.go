@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"os"
-	"strconv"
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
@@ -14,38 +13,43 @@ import (
 func (m Model) headerView() string {
 	width, _, _ := term.GetSize(int(os.Stdout.Fd()))
 	doc := strings.Builder{}
-	tabs := []string{}
-	for i, t := range m.Tabs {
-		if i == m.activeTab {
+	tabs := m.activeTabs()
+	idx := m.activeTabIdx()
+	tabViews := []string{}
+	for i, t := range tabs {
+		if i == idx {
 			if m.focused {
-				tabs = append(tabs, components.ActiveTabStyle.Render(t.Name))
+				tabViews = append(tabViews, components.ActiveTabStyle.Render(t.Name))
 			} else {
-				tabs = append(tabs, components.ActiveTabBlurStyle.Render(t.Name))
+				tabViews = append(tabViews, components.ActiveTabBlurStyle.Render(t.Name))
 			}
 		} else {
-			tabs = append(tabs, components.InactiveTabStyle.Render(t.Name))
+			tabViews = append(tabViews, components.InactiveTabStyle.Render(t.Name))
 		}
 	}
 
 	row := lipgloss.JoinHorizontal(
 		lipgloss.Top,
-		tabs...,
+		tabViews...,
 	)
 	gap := components.TabGap.Render(strings.Repeat(" ", max(0, width-lipgloss.Width(row)-2)))
 	row = lipgloss.JoinHorizontal(lipgloss.Bottom, row, gap)
 	doc.WriteString(row)
 	return doc.String()
 }
+
 func (m Model) footerView() string {
 	width, _, _ := term.GetSize(int(os.Stdout.Fd()))
 	doc := strings.Builder{}
 	w := lipgloss.Width
 
-	statusKey := components.StatusSectionStyle.Render("PR")
+	modeLabel := "PR"
+	if m.mode == "issue" {
+		modeLabel = "Issue"
+	}
+
+	statusKey := components.StatusSectionStyle.Render(modeLabel)
 	statusHelp := components.StatusHelpStyle.Render("? Help")
-	focused := strconv.FormatBool(m.focused)
-	dimensions := fmt.Sprintf("%d,%d,%d,%d", m.viewport.Width, m.viewport.Height, m.viewport.YOffset, m.viewport.YPosition)
-	_, _ = focused, dimensions
 	statusVal := components.StatusText.Copy().
 		Width(width - w(statusKey) - w(statusHelp)).
 		Render(m.context.StatusText)
@@ -58,16 +62,29 @@ func (m Model) footerView() string {
 	doc.WriteString(components.StatusBarStyle.Width(width).Render(bar))
 	return doc.String()
 }
+
 func (m Model) View() string {
-	// If we need setup, show the setup dialog
+	// PR setup dialog
 	if m.needsSetup {
 		width, height, _ := term.GetSize(int(os.Stdout.Fd()))
 		background := strings.Repeat(strings.Repeat(" ", width)+"\n", height)
 		return components.RenderCenteredOverlay(m.setupDialog.View(), background, width/2, height/2)
 	}
 
+	// Issue setup dialog
+	if m.issueNeedsSetup {
+		width, height, _ := term.GetSize(int(os.Stdout.Fd()))
+		background := strings.Repeat(strings.Repeat(" ", width)+"\n", height)
+		return components.RenderCenteredOverlay(m.setupDialog.View(), background, width/2, height/2)
+	}
+
+	tabs := m.activeTabs()
+	if len(tabs) == 0 {
+		return fmt.Sprintf("%s\n%s\n%s", m.headerView(), "No tabs. Use :new-issue-tab or :newtab", m.footerView())
+	}
+
 	var body string
-	m.viewport.SetContent(m.Tabs[m.activeTab].View())
+	m.viewport.SetContent(tabs[m.activeTabIdx()].View())
 	body = m.viewport.View()
 	if m.showHelp {
 		width, _, _ := term.GetSize(int(os.Stdout.Fd()))

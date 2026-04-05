@@ -20,6 +20,10 @@ var cmdMap = map[string]interface{}{
 	"request-changes": components.CmdRequestChanges{},
 	"help":            components.CmdHelp{},
 	"quit":            components.CmdQuit{},
+	"issues":          components.CmdSwitchMode{Mode: "issue"},
+	"prs":             components.CmdSwitchMode{Mode: "pr"},
+	"milestones":      components.CmdMilestones{},
+	"new-issue-tab": components.CmdNewIssueTab{},
 }
 
 func (m Model) sendCommandMessage(command string) tea.Cmd {
@@ -92,6 +96,18 @@ func (m Model) sendCommandMessage(command string) tea.Cmd {
 		return func() tea.Msg { return components.CmdHelp{} }
 	case components.CmdQuit:
 		return func() tea.Msg { return components.CmdQuit{} }
+	case components.CmdSwitchMode:
+		mode := msg.(components.CmdSwitchMode).Mode
+		return func() tea.Msg { return components.CmdSwitchMode{Mode: mode} }
+	case components.CmdMilestones:
+		if cmdArg == "" {
+			m.context.StatusText = "Usage: milestones <owner/repo>"
+			return nil
+		}
+		repo := cmdArg
+		return func() tea.Msg { return components.CmdMilestones{Repo: repo} }
+	case components.CmdNewIssueTab:
+		return func() tea.Msg { return components.CmdNewIssueTab{} }
 	}
 	return nil
 }

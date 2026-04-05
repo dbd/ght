@@ -28,65 +28,68 @@ func getHelpContent() string {
 	doc := strings.Builder{}
 	doc.WriteString(BoldStyle.Render("Commands") + "\n\n")
 	
-	commands := []struct {
-		name  string
-		usage string
-		desc  string
-	}{
-		{"newtab", ":newtab", "Create a new search tab"},
-		{"save-tab", ":save-tab <name>", "Save current search tab to config"},
-		{"refresh", ":refresh", "Refresh current tab (search or PR)"},
-		{"merge", ":merge", "Open merge dialog for current PR"},
-		{"add-assignee", ":add-assignee <username>", "Add assignee to current PR"},
-		{"add-reviewer", ":add-reviewer <username>", "Add reviewer to current PR"},
-		{"comment", ":comment <message>", "Add comment to current PR"},
-		{"approve", ":approve [message]", "Approve current PR (optional message)"},
-		{"request-changes", ":request-changes <message>", "Request changes on current PR"},
-		{"help", ":help", "Show this help dialog"},
-	}
-	
-	for _, cmd := range commands {
-		doc.WriteString(RenderColoredText(cmd.usage, "blue") + "\n")
-		doc.WriteString("  " + cmd.desc + "\n\n")
-	}
-	
-	doc.WriteString("\n" + BoldStyle.Render("Key Bindings") + "\n\n")
-	
-	bindings := []struct {
-		key  string
-		desc string
-	}{
-		{"j/k or ↑/↓", "Navigate up/down"},
+	doc.WriteString(BoldStyle.Render("Navigation") + "\n\n")
+	navCmds := []struct{ usage, desc string }{
+		{"I / P", "Switch to Issue / PR mode"},
+		{":issues  :prs", "Switch mode via command"},
 		{"h/l or ←/→", "Switch tabs"},
+		{"j/k or ↑/↓", "Navigate up/down"},
 		{"Enter", "Select/Open"},
-		{"/", "Search/Filter"},
+		{"/", "Filter (search tabs)"},
 		{"?", "Toggle help"},
 		{"q or Ctrl+W", "Close tab"},
 		{"Esc or Ctrl+C", "Exit/Cancel"},
 		{":", "Enter command mode"},
 		{"Ctrl+Z", "Suspend"},
 	}
-	
-	doc.WriteString(BoldStyle.Render("Global Keys") + "\n")
-	for _, kb := range bindings {
-		doc.WriteString(RenderColoredText(kb.key, "green") + " - " + kb.desc + "\n")
+	for _, c := range navCmds {
+		doc.WriteString(RenderColoredText(c.usage, "green") + " - " + c.desc + "\n")
 	}
-	
-	doc.WriteString("\n" + BoldStyle.Render("PR Detail Keys") + "\n")
-	prKeys := []struct {
-		key  string
-		desc string
-	}{
-		{"c", "Show comments"},
+
+	doc.WriteString("\n" + BoldStyle.Render("Commands") + "\n\n")
+	commands := []struct{ usage, desc string }{
+		{":newtab", "New PR search tab"},
+		{":new-issue-tab", "New issue search tab"},
+		{":milestones <owner/repo>", "Open milestone list for a repo"},
+		{":save-tab <name>", "Save current tab to config (PR search, issue search, or milestones)"},
+		{":refresh", "Refresh current tab"},
+		{":merge", "Merge current PR"},
+		{":add-assignee <user>", "Add assignee to current PR"},
+		{":add-reviewer <user>", "Add reviewer to current PR"},
+		{":comment <message>", "Add comment to current PR"},
+		{":approve [message]", "Approve current PR"},
+		{":request-changes <msg>", "Request changes on current PR"},
+		{":help", "Show this help dialog"},
+		{":quit", "Exit"},
+	}
+	for _, cmd := range commands {
+		doc.WriteString(RenderColoredText(cmd.usage, "blue") + "\n")
+		doc.WriteString("  " + cmd.desc + "\n\n")
+	}
+
+	doc.WriteString(BoldStyle.Render("PR Detail Keys") + "\n\n")
+	prKeys := []struct{ key, desc string }{
+		{"c", "Show/hide inline comments"},
 		{"m", "Open merge dialog"},
 		{"C", "Add comment"},
 		{"a", "Approve PR"},
 		{"x", "Request changes"},
 		{"r", "Add reviewer"},
-		{"A", "Add assignee (Shift+A)"},
+		{"A", "Add assignee"},
 	}
-	
 	for _, kb := range prKeys {
+		doc.WriteString(RenderColoredText(kb.key, "green") + " - " + kb.desc + "\n")
+	}
+
+	doc.WriteString("\n" + BoldStyle.Render("Issue Detail Keys") + "\n\n")
+	issueKeys := []struct{ key, desc string }{
+		{"c", "Add comment"},
+		{"A", "Add assignee"},
+		{"x", "Close / Reopen issue"},
+		{"o", "Open in browser"},
+		{"M", "Open milestone detail"},
+	}
+	for _, kb := range issueKeys {
 		doc.WriteString(RenderColoredText(kb.key, "green") + " - " + kb.desc + "\n")
 	}
 	

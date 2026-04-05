@@ -9,21 +9,28 @@ import (
 )
 
 type Config struct {
-	Repo  string   `mapstructure:Repo`
-	Pr    PrConfig `mapstructure:pr`
-	Issue IssueConfig
+	Repo  string      `mapstructure:"repo"`
+	Pr    PrConfig    `mapstructure:"pr"`
+	Issue IssueConfig `mapstructure:"issue"`
 }
 
 type PrConfig struct {
-	Searches []Search `mapstructure:searches`
+	Searches []Search `mapstructure:"searches"`
 }
+
 type IssueConfig struct {
-	Searches []Search
+	Searches   []Search        `mapstructure:"searches"`
+	Milestones []MilestoneRepo `mapstructure:"milestones"`
+}
+
+type MilestoneRepo struct {
+	Name string `mapstructure:"name"`
+	Repo string `mapstructure:"repo"`
 }
 
 type Search struct {
-	Name  string `mapstructure:name`
-	Query string `mapstructure:query`
+	Name  string `mapstructure:"name"`
+	Query string `mapstructure:"query"`
 }
 
 func GetConfigCmd() tea.Cmd {
@@ -77,8 +84,38 @@ func SaveSearch(name string, query string) error {
 	return writeConfig(config)
 }
 
+func SaveIssueSearch(name string, query string) error {
+	config := GetConfig()
+
+	for i, search := range config.Issue.Searches {
+		if search.Name == name {
+			config.Issue.Searches[i].Query = query
+			return writeConfig(config)
+		}
+	}
+
+	config.Issue.Searches = append(config.Issue.Searches, Search{Name: name, Query: query})
+	return writeConfig(config)
+}
+
+func SaveMilestoneRepo(name string, repo string) error {
+	config := GetConfig()
+
+	for i, m := range config.Issue.Milestones {
+		if m.Name == name {
+			config.Issue.Milestones[i].Repo = repo
+			return writeConfig(config)
+		}
+	}
+
+	config.Issue.Milestones = append(config.Issue.Milestones, MilestoneRepo{Name: name, Repo: repo})
+	return writeConfig(config)
+}
+
 func writeConfig(config Config) error {
 	viper.Set("pr.searches", config.Pr.Searches)
+	viper.Set("issue.searches", config.Issue.Searches)
+	viper.Set("issue.milestones", config.Issue.Milestones)
 	configPath := os.ExpandEnv("$HOME/.config/ght/config.yaml")
 	
 	// Create directory if it doesn't exist

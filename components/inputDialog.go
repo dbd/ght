@@ -19,6 +19,7 @@ type InputDialogModel struct {
 	focused     bool
 	dialogType  InputDialogType
 	textinput   textinput.Model
+	title       string
 }
 
 func NewInputDialogModel(ctx *Context, pr api.PullRequestResponse) *InputDialogModel {
@@ -40,11 +41,15 @@ func (m InputDialogModel) Init() tea.Cmd {
 
 func (m InputDialogModel) View() string {
 	var title string
-	switch m.dialogType {
-	case InputDialogAssignee:
-		title = "Add Assignee"
-	case InputDialogReviewer:
-		title = "Add Reviewer"
+	if m.title != "" {
+		title = m.title
+	} else {
+		switch m.dialogType {
+		case InputDialogAssignee:
+			title = "Add Assignee"
+		case InputDialogReviewer:
+			title = "Add Reviewer"
+		}
 	}
 
 	body := m.textinput.View() + "\n\n"
@@ -101,6 +106,26 @@ func (m *InputDialogModel) FocusWithType(dialogType InputDialogType) {
 	case InputDialogReviewer:
 		m.textinput.Placeholder = "Enter reviewer username..."
 	}
+}
+
+// UpdateTextOnly updates only the textinput without triggering any API calls.
+// Used by issue detail to control submission manually.
+func (m *InputDialogModel) UpdateTextOnly(msg tea.Msg) (*InputDialogModel, tea.Cmd) {
+	var cmd tea.Cmd
+	m.textinput, cmd = m.textinput.Update(msg)
+	return m, cmd
+}
+
+func (m *InputDialogModel) FocusWithPlaceholder(placeholder string) {
+	m.title = placeholder
+	m.textinput.Placeholder = placeholder
+	m.textinput.SetValue("")
+	m.focused = true
+	m.textinput.Focus()
+}
+
+func (m *InputDialogModel) Value() string {
+	return m.textinput.Value()
 }
 
 func (m *InputDialogModel) Blur() {
