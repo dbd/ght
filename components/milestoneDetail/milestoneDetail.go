@@ -267,6 +267,10 @@ func (m *Model) ToggleHelp() tea.Msg {
 	return m.showHelp
 }
 
+func (m *Model) ShowingHelp() bool {
+	return m.showHelp
+}
+
 func (m *Model) IsInTextInput() bool {
 	return false
 }

@@ -220,6 +220,29 @@ func formatHeader(pr api.PullRequestResponse) string {
 	}
 	doc.WriteString("Reviewers: " + formatReviewers(pr) + "\n")
 	doc.WriteString("CI: " + formatCIChecks(pr) + "\n")
+	issues := formatLinkedIssues(pr)
+	if issues != "" {
+		doc.WriteString("Closes: " + issues + "\n")
+	}
+	return doc.String()
+}
+
+func formatLinkedIssues(pr api.PullRequestResponse) string {
+	nodes := pr.ClosingIssuesReferences.Nodes
+	if len(nodes) == 0 {
+		return ""
+	}
+	doc := strings.Builder{}
+	for i, issue := range nodes {
+		if i > 0 {
+			doc.WriteString(", ")
+		}
+		stateColor := "green"
+		if issue.State == "CLOSED" {
+			stateColor = "grey"
+		}
+		doc.WriteString(components.RenderColoredText(fmt.Sprintf("#%d %s", issue.Number, issue.Title), stateColor))
+	}
 	return doc.String()
 }
 

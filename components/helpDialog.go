@@ -37,8 +37,8 @@ func getHelpContent() string {
 		{"Enter", "Select/Open"},
 		{"/", "Filter (search tabs)"},
 		{"?", "Toggle help"},
-		{"q or Ctrl+W", "Close tab"},
-		{"Esc or Ctrl+C", "Exit/Cancel"},
+		{"q or Ctrl+W or Esc", "Back / close tab"},
+		{"Ctrl+C", "Exit"},
 		{":", "Enter command mode"},
 		{"Ctrl+Z", "Suspend"},
 	}

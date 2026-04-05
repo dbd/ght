@@ -1,17 +1,19 @@
 # ght - GitHub TUI
 
-A fast, keyboard-driven terminal UI for browsing and managing GitHub Pull Requests.
+A fast, keyboard-driven terminal UI for browsing and managing GitHub Pull Requests, Issues, and Milestones.
 
 Built with [Bubble Tea](https://github.com/charmbracelet/bubbletea) and the [GitHub CLI](https://cli.github.com/).
 
 ## Features
 
-- 🔍 **Powerful Search** - Search PRs with GitHub's query syntax
-- 📑 **Multiple Tabs** - Browse multiple PRs and searches simultaneously
+- 🔍 **Powerful Search** - Search PRs and issues with GitHub's query syntax
+- 📑 **Multiple Tabs** - Browse multiple PRs, issues, and searches simultaneously
 - ⌨️ **Vim-style Keys** - Navigate efficiently with familiar keybindings
 - 📝 **Full PR Management** - Comment, approve, request changes, merge
+- 🐛 **Issue Management** - View, comment, close/reopen, and assign issues
+- 🏁 **Milestones** - Browse milestones with progress bars and drill into their issues
 - 👥 **Team Collaboration** - Add reviewers and assignees
-- 💾 **Saved Searches** - Save frequently used searches to config
+- 💾 **Saved Searches** - Save frequently used PR and issue searches to config
 - 🎨 **Rich Rendering** - Markdown support, syntax highlighting, colored diffs
 - 🔄 **Live Updates** - Refresh PRs and searches on demand
 
@@ -66,8 +68,15 @@ go build
          query: "is:pr author:@me"
        - name: "Review Queue"
          query: "is:pr review-requested:@me"
-       - name: "Team PRs"
-         query: "is:pr org:yourorg is:open"
+   issue:
+     searches:
+       - name: "My Issues"
+         query: "is:issue author:@me is:open"
+       - name: "Assigned to Me"
+         query: "is:issue assignee:@me is:open"
+     milestones:
+       - name: "My Project"
+         repo: "owner/repo"
    ```
 
 3. **Launch ght**:
@@ -77,13 +86,22 @@ go build
 
 ## Usage
 
+### Modes
+
+ght has two modes: **PR mode** and **Issue mode**. Switch between them with commands:
+
+| Command | Description |
+|---------|-------------|
+| `:prs` | Switch to PR mode |
+| `:issues` | Switch to Issue mode |
+
 ### Navigation
 
 | Key | Action |
 |-----|--------|
 | `j`/`k` or `↑`/`↓` | Move up/down |
 | `h`/`l` or `←`/`→` | Switch tabs left/right |
-| `Enter` | Open selected PR |
+| `Enter` | Open selected item |
 | `q` or `Ctrl+W` | Close current tab |
 | `Esc` or `Ctrl+C` | Exit application / Cancel dialog |
 | `?` | Toggle help |
@@ -106,8 +124,18 @@ go build
 | `a` | Approve PR |
 | `x` | Request changes |
 | `r` | Add reviewer |
-| `A` | Add assignee (Shift+A) |
+| `A` | Add assignee |
 | `m` | Open merge dialog |
+
+### Issue Actions
+
+| Key | Action |
+|-----|--------|
+| `c` | Add comment |
+| `A` | Add assignee |
+| `x` | Close / reopen issue |
+| `o` | Open issue in browser |
+| `M` | Open milestone (if issue has one) |
 
 ### Command Mode
 
@@ -115,16 +143,21 @@ Press `:` to enter command mode. Available commands:
 
 | Command | Description |
 |---------|-------------|
-| `:newtab` | Create a new search tab |
+| `:prs` | Switch to PR mode |
+| `:issues` | Switch to Issue mode |
+| `:newtab` | Create a new PR search tab |
+| `:new-issue-tab` | Create a new issue search tab |
+| `:milestones <owner/repo>` | Open milestone list for a repo |
 | `:save-tab <name>` | Save current search to config |
 | `:refresh` | Refresh current tab |
 | `:merge` | Open merge dialog |
 | `:add-assignee <username>` | Add assignee to PR |
 | `:add-reviewer <username>` | Add reviewer to PR |
-| `:comment <message>` | Add a comment to PR |
+| `:comment <message>` | Add a comment |
 | `:approve [message]` | Approve PR with optional comment |
 | `:request-changes <message>` | Request changes on PR |
 | `:help` | Show help dialog |
+| `:quit` | Quit ght |
 
 ## Configuration
 
@@ -137,30 +170,42 @@ pr:
   searches:
     - name: "My Open PRs"
       query: "is:pr author:@me is:open"
-    
+
     - name: "Needs My Review"
       query: "is:pr review-requested:@me is:open"
-    
+
     - name: "Recently Updated"
       query: "is:pr is:open sort:updated-desc"
-    
+
+issue:
+  searches:
+    - name: "My Issues"
+      query: "is:issue author:@me is:open"
+
     - name: "Assigned to Me"
-      query: "is:pr assignee:@me is:open"
+      query: "is:issue assignee:@me is:open"
+
+    - name: "Bugs"
+      query: "is:issue label:bug is:open"
+
+  milestones:
+    - name: "My Project"
+      repo: "owner/repo"
+    - name: "Other Repo"
+      repo: "owner/other-repo"
 ```
 
 ### GitHub Search Query Syntax
 
 Use GitHub's advanced search syntax for powerful queries:
 
-- `is:pr` - Pull requests only
-- `is:open` / `is:closed` / `is:merged` - PR state
-- `author:username` - PRs by author
-- `author:@me` - Your PRs
+- `is:pr` / `is:issue` - Filter by type
+- `is:open` / `is:closed` / `is:merged` - State filter
+- `author:username` / `author:@me` - Filter by author
 - `review-requested:@me` - PRs requesting your review
-- `assignee:username` - PRs assigned to user
-- `org:orgname` - PRs in organization
-- `repo:owner/repo` - PRs in specific repo
-- `label:bug` - PRs with label
+- `assignee:username` - Assigned to user
+- `org:orgname` / `repo:owner/repo` - Scope to org or repo
+- `label:bug` - Filter by label
 - `sort:updated-desc` - Sort by update time
 
 [Full search syntax documentation](https://docs.github.com/en/search-github/searching-on-github/searching-issues-and-pull-requests)
@@ -177,17 +222,31 @@ Use GitHub's advanced search syntax for powerful queries:
 6. Enter your review message and press `Ctrl+S`
 7. Press `q` to close tab and return to queue
 
+### Issue Triage
+
+1. Switch to issue mode with `:issues`
+2. Browse issues with `j`/`k`, press `Enter` to open
+3. Press `x` to close/reopen, `A` to add an assignee, `c` to comment
+4. Press `M` to jump to the issue's milestone
+
+### Milestone Tracking
+
+1. Open a milestone list: `:milestones owner/repo`
+2. Browse milestones — progress bars show open/closed issue counts
+3. Press `Enter` to drill into a milestone's issues
+4. Press `Enter` on an issue to open it
+
 ### Quick Comment
 
-From any PR detail view:
+From any PR or issue detail view:
 ```
-:comment Great work! LGTM 🚀
+:comment Great work! LGTM
 ```
 
 Or use the dialog:
-1. Press `C`
+1. Press `C` (PR) or `c` (issue)
 2. Type your comment
-3. Press `Ctrl+S` to submit
+3. Press `Enter` / `Ctrl+S` to submit
 
 ### Merge PR
 
@@ -228,9 +287,15 @@ Or use dialog:
 │   ├── helpDialog.go        # Help dialog component
 │   ├── pullRequestSearch/   # PR list/search component
 │   ├── pullRequestDetail/   # PR detail view + diff
+│   ├── issueSearch/         # Issue list/search component
+│   ├── issueDetail/         # Issue detail view
+│   ├── milestoneList/       # Milestone list component
+│   ├── milestoneDetail/     # Milestone detail + issue table
 │   └── tab/                 # Tab wrapper component
 ├── internal/api/
-│   ├── pullrequest.go       # GitHub API calls
+│   ├── pullrequest.go       # PR GitHub API calls
+│   ├── issue.go             # Issue GitHub API calls
+│   ├── milestone.go         # Milestone GitHub API calls
 │   └── types.go             # API response types
 └── utils/
     └── gitDiffParse.go      # Git diff parser
@@ -255,11 +320,13 @@ See [AGENTS.md](AGENTS.md) for detailed development documentation.
 
 ### Create Custom Searches
 
-Use `:newtab` to create a new search tab, enter your query with `/`, then save it with `:save-tab "My Custom Search"`.
+**PR search:** Use `:newtab` to create a new search tab, enter your query with `/`, then save it with `:save-tab "My Custom Search"`.
 
-### Quick PR Access
+**Issue search:** Use `:new-issue-tab`, enter your query with `/`, then save with `:save-tab "My Issue Search"`.
 
-In your PR list, press `/` and type the PR number to quickly filter.
+### Quick Access
+
+In any list, press `/` and type to filter by title, number, or other fields.
 
 ### Terminal Multiplexer Integration
 

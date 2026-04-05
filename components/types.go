@@ -24,6 +24,7 @@ type Page interface {
 	Blur() tea.Msg
 	Focus() tea.Msg
 	ToggleHelp() tea.Msg
+	ShowingHelp() bool
 	IsInTextInput() bool
 }
 

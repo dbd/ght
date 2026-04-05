@@ -32,10 +32,11 @@ type PullRequestResponse struct {
 	PullRequestCommits PullRequestCommits     `graphql:"commits(first: 10)"`
 	HeadRef            HeadRef
 	ReviewThreads      ReviewThreads          `graphql:"reviewThreads(first: 10)"`
-	Labels             Labels                 `graphql:"labels(first: 10)"`
-	Reviews            Reviews                `graphql:"reviews(first: 10)"`
-	ReviewRequests     ReviewRequests         `graphql:"reviewRequests(first: 10)"`
-	TimelineItems      TimelineItems          `graphql:"timelineItems(first: 30)"`
+	Labels                  Labels                  `graphql:"labels(first: 10)"`
+	Reviews                 Reviews                 `graphql:"reviews(first: 10)"`
+	ReviewRequests          ReviewRequests          `graphql:"reviewRequests(first: 10)"`
+	TimelineItems           TimelineItems           `graphql:"timelineItems(first: 30)"`
+	ClosingIssuesReferences ClosingIssuesReferences `graphql:"closingIssuesReferences(first: 10)"`
 }
 
 func (pr PullRequestResponse) CIState() string {
@@ -401,6 +402,17 @@ type LineRange struct {
 }
 
 // Issue types
+
+type ClosingIssuesReferences struct {
+	Nodes []ClosingIssueReference
+}
+
+type ClosingIssueReference struct {
+	Number     int64
+	Title      string
+	State      string
+	Repository Repository
+}
 
 type Issues struct {
 	Query  string

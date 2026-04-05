@@ -32,7 +32,13 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 			cmds = append(cmds, m.page.ToggleHelp)
 		case key.Matches(msg, components.DefaultKeyMap.Close) && !m.IsInTextInput():
 			cmds = append(cmds, m.page.Blur)
-		case key.Matches(msg, m.context.KeyMap.Exit) && !m.IsInTextInput():
+		case msg.String() == "esc" && !m.IsInTextInput():
+			if m.page.ShowingHelp() {
+				m.page.ToggleHelp()
+			} else {
+				cmds = append(cmds, m.page.Blur)
+			}
+		case msg.String() == "ctrl+c" && !m.IsInTextInput():
 			return m, tea.Quit
 		}
 	}
