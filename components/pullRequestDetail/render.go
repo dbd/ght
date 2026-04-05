@@ -219,7 +219,59 @@ func formatHeader(pr api.PullRequestResponse) string {
 		doc.WriteString("Assignees: " + assignees + "\n")
 	}
 	doc.WriteString("Reviewers: " + formatReviewers(pr) + "\n")
+	doc.WriteString("CI: " + formatCIChecks(pr) + "\n")
 	return doc.String()
+}
+
+func formatCIChecks(pr api.PullRequestResponse) string {
+	state := pr.CIState()
+	if state == "" {
+		return "-"
+	}
+	checks := pr.CIChecks()
+	if len(checks) == 0 {
+		return formatCIStateText(state)
+	}
+	doc := strings.Builder{}
+	doc.WriteString(formatCIStateText(state) + " ")
+	for i, c := range checks {
+		if i > 0 {
+			doc.WriteString(" · ")
+		}
+		var name, conclusion string
+		switch c.Type {
+		case "CheckRun":
+			name = c.CheckRun.Name
+			conclusion = c.CheckRun.Conclusion
+			if conclusion == "" {
+				conclusion = c.CheckRun.Status
+			}
+		case "StatusContext":
+			name = c.StatusContext.Context
+			conclusion = c.StatusContext.State
+		}
+		doc.WriteString(formatCIStateText(conclusion) + " " + name)
+	}
+	return doc.String()
+}
+
+func formatCIStateText(state string) string {
+	switch state {
+	case "SUCCESS", "success":
+		return components.RenderColoredText("✓", "green")
+	case "FAILURE", "failure", "FAILED":
+		return components.RenderColoredText("✗", "red")
+	case "PENDING", "pending", "IN_PROGRESS", "QUEUED":
+		return components.RenderColoredText("●", "yellow")
+	case "ERROR", "error", "ACTION_REQUIRED", "TIMED_OUT", "CANCELLED", "STARTUP_FAILURE":
+		return components.RenderColoredText("!", "red")
+	case "SKIPPED", "NEUTRAL":
+		return components.RenderColoredText("–", "grey")
+	case "EXPECTED":
+		return components.RenderColoredText("?", "grey")
+	default:
+		return components.RenderColoredText(state, "grey")
+	}
 }
 
 func formatAssignees(pr api.PullRequestResponse) string {
