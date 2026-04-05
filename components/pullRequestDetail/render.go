@@ -216,9 +216,12 @@ func formatHeader(pr api.PullRequestResponse) string {
 	doc.WriteString(strconv.FormatInt(pr.Number, 10) + " · " + pr.Repository.NameWithOwner + " | " + ad + "\n")
 	assignees := formatAssignees(pr)
 	if assignees != "" {
-		doc.WriteString("Assignees: " + assignees + "\n")
+		doc.WriteString("Assignees:" + assignees + "\n")
 	}
-	doc.WriteString("Reviewers: " + formatReviewers(pr) + "\n")
+	reviewers := formatReviewers(pr)
+	if reviewers != "" {
+		doc.WriteString("Reviewers:" + reviewers + "\n")
+	}
 	doc.WriteString("CI: " + formatCIChecks(pr) + "\n")
 	issues := formatLinkedIssues(pr)
 	if issues != "" {
@@ -256,11 +259,8 @@ func formatCIChecks(pr api.PullRequestResponse) string {
 		return formatCIStateText(state)
 	}
 	doc := strings.Builder{}
-	doc.WriteString(formatCIStateText(state) + " ")
-	for i, c := range checks {
-		if i > 0 {
-			doc.WriteString(" · ")
-		}
+	doc.WriteString(formatCIStateText(state))
+	for _, c := range checks {
 		var name, conclusion string
 		switch c.Type {
 		case "CheckRun":
@@ -273,7 +273,7 @@ func formatCIChecks(pr api.PullRequestResponse) string {
 			name = c.StatusContext.Context
 			conclusion = c.StatusContext.State
 		}
-		doc.WriteString(formatCIStateText(conclusion) + " " + name)
+		doc.WriteString("\n  " + formatCIStateText(conclusion) + " " + name)
 	}
 	return doc.String()
 }
@@ -298,18 +298,17 @@ func formatCIStateText(state string) string {
 }
 
 func formatAssignees(pr api.PullRequestResponse) string {
+	if len(pr.Assignees.Nodes) == 0 {
+		return ""
+	}
 	doc := strings.Builder{}
-	for i, assignee := range pr.Assignees.Nodes {
-		if i > 0 {
-			doc.WriteString(", ")
-		}
-		doc.WriteString(components.BoldStyle.Render(assignee.Login))
+	for _, assignee := range pr.Assignees.Nodes {
+		doc.WriteString("\n  " + components.BoldStyle.Render(assignee.Login))
 	}
 	return doc.String()
 }
 
 func formatReviewers(pr api.PullRequestResponse) string {
-	doc := strings.Builder{}
 	rm := map[string]string{}
 	for _, reviewer := range pr.ReviewRequests.Nodes {
 		rm[formatReviewer(reviewer.RequestedReviewer)] = ""
@@ -330,8 +329,12 @@ func formatReviewers(pr api.PullRequestResponse) string {
 		}
 		rm[formatActor(r.Author)] = c
 	}
+	if len(rm) == 0 {
+		return ""
+	}
+	doc := strings.Builder{}
 	for k, v := range rm {
-		doc.WriteString(components.RenderColoredText(k, v))
+		doc.WriteString("\n  " + components.RenderColoredText(k, v))
 	}
 	return doc.String()
 }

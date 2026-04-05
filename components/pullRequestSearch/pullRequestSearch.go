@@ -58,7 +58,7 @@ func NewModel(prs []api.PullRequestResponse, query string, ctx *components.Conte
 func getColumns(maxWidth int) []table.Column {
 	columns := []table.Column{
 		{Title: "Age", Width: 10},
-		{Title: "Repo", Width: 10},
+		{Title: "Repo", Width: 20},
 		{Title: "Number", Width: 8},
 		{Title: "Author", Width: 20},
 		{Title: "Approved", Width: 10},
