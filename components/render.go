@@ -72,6 +72,21 @@ func RenderCenteredOverlay(body, background string, x, y int) string {
 	return PlaceOverlay(x-xOffset, y-yOffset, body, rbg)
 }
 
+func CenterInViewport(content string, viewportWidth, contentWidth int) string {
+	leftPad := (viewportWidth - contentWidth) / 2
+	if leftPad <= 0 {
+		return content
+	}
+	pad := strings.Repeat(" ", leftPad)
+	lines := strings.Split(content, "\n")
+	for i, line := range lines {
+		if line != "" {
+			lines[i] = pad + line
+		}
+	}
+	return strings.Join(lines, "\n")
+}
+
 func RenderColoredText(text, cs string) string {
 	cm := map[string]lipgloss.Color{
 		"black":    Black,

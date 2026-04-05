@@ -71,8 +71,7 @@ func getIssueColumns(maxWidth int) []table.Column {
 }
 
 func newIssueTable(ctx *components.Context) table.Model {
-	maxWidth, _, _ := term.GetSize(int(os.Stdout.Fd()))
-	columns := getIssueColumns(maxWidth)
+	columns := getIssueColumns(min(ctx.ViewportWidth, ctx.DetailWidth))
 	t := table.New(
 		table.WithColumns(columns),
 		table.WithFocused(false),
@@ -122,11 +121,10 @@ func (m Model) Update(msg tea.Msg) (components.Page, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.viewport.Width = m.context.ViewportWidth
 		m.viewport.Height = m.context.ViewportHeight - 1
-		if m.table.Width() != m.context.ViewportWidth {
-			maxWidth := m.context.ViewportWidth
-			m.table.SetWidth(maxWidth)
-			columns := getIssueColumns(maxWidth)
-			m.table.SetColumns(columns)
+		tableWidth := min(m.context.ViewportWidth, m.context.DetailWidth)
+		if m.table.Width() != tableWidth {
+			m.table.SetWidth(tableWidth)
+			m.table.SetColumns(getIssueColumns(tableWidth))
 		}
 		tableH := m.context.ViewportHeight - headerLines - 2
 		if tableH < 3 {
@@ -174,7 +172,7 @@ func (m Model) renderContent() string {
 }
 
 func (m Model) View() string {
-	m.viewport.SetContent(m.renderContent())
+	m.viewport.SetContent(components.CenterInViewport(m.renderContent(), m.context.ViewportWidth, m.context.DetailWidth))
 	body := m.viewport.View()
 	if m.showHelp {
 		width, height, _ := term.GetSize(int(os.Stdout.Fd()))

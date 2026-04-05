@@ -108,6 +108,11 @@ func initializeModel() Model {
 	m.context.ViewportHeight = m.viewport.Height
 	m.context.ViewportYOffset = m.viewport.YOffset
 	m.context.ViewportYPosition = m.viewport.YPosition
+	if config.DetailWidth > 0 {
+		m.context.DetailWidth = config.DetailWidth
+	} else {
+		m.context.DetailWidth = 120
+	}
 
 	// Initialize PR tabs
 	prTabs := []tab.Model{}

@@ -9,9 +9,10 @@ import (
 )
 
 type Config struct {
-	Repo  string      `mapstructure:"repo"`
-	Pr    PrConfig    `mapstructure:"pr"`
-	Issue IssueConfig `mapstructure:"issue"`
+	Repo        string      `mapstructure:"repo"`
+	DetailWidth int         `mapstructure:"detailWidth"`
+	Pr          PrConfig    `mapstructure:"pr"`
+	Issue       IssueConfig `mapstructure:"issue"`
 }
 
 type PrConfig struct {

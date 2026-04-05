@@ -62,7 +62,7 @@ func NewModel(issue api.IssueResponse, ctx *components.Context) *Model {
 	m.issue = issue
 	m.context = ctx
 	m.viewport = viewport.New(ctx.ViewportWidth, ctx.ViewportHeight-1)
-	m.viewport.SetContent(RenderIssueDetail(issue, ctx.ViewportWidth-2))
+	m.viewport.SetContent(components.CenterInViewport(RenderIssueDetail(issue, ctx.DetailWidth), ctx.ViewportWidth, ctx.DetailWidth))
 	m.viewport.YPosition = ctx.ViewportYPosition
 	m.inputDialog = *components.NewInputDialogModel(ctx, api.PullRequestResponse{})
 	m.ready = true
@@ -111,7 +111,7 @@ func (m Model) Update(msg tea.Msg) (components.Page, tea.Cmd) {
 	case api.IssueRefresh:
 		if msg.Error == nil {
 			m.issue = msg.Issue
-			m.viewport.SetContent(RenderIssueDetail(m.issue, m.context.ViewportWidth-2))
+			m.viewport.SetContent(components.CenterInViewport(RenderIssueDetail(m.issue, m.context.DetailWidth), m.context.ViewportWidth, m.context.DetailWidth))
 		} else {
 			m.context.StatusText = "Failed to refresh issue: " + msg.Error.Error()
 		}
@@ -171,7 +171,7 @@ func (m Model) Update(msg tea.Msg) (components.Page, tea.Cmd) {
 		}
 	}
 
-	m.viewport.SetContent(RenderIssueDetail(m.issue, m.context.ViewportWidth-2))
+	m.viewport.SetContent(components.CenterInViewport(RenderIssueDetail(m.issue, m.context.DetailWidth), m.context.ViewportWidth, m.context.DetailWidth))
 	v, vCmd := m.viewport.Update(msg)
 	m.viewport = v
 	cmds = append(cmds, vCmd)

@@ -12,6 +12,7 @@ type Context struct {
 	ViewportHeight    int
 	ViewportYOffset   int
 	ViewportYPosition int
+	DetailWidth       int
 	StatusText        string
 	KeyMap            KeyMap
 	Help              help.Model

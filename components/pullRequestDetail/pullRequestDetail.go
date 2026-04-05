@@ -77,7 +77,7 @@ func NewModel(pr api.PullRequestResponse, ctx *components.Context) *Model {
 	m.context = ctx
 	m.showComments = false
 	m.viewport = viewport.New(m.context.ViewportWidth, m.context.ViewportHeight-1)
-	m.viewport.SetContent(RenderPullRequestDetail(m.pullRequest, ctx.ViewportWidth-2))
+	m.viewport.SetContent(components.CenterInViewport(RenderPullRequestDetail(m.pullRequest, ctx.DetailWidth), ctx.ViewportWidth, ctx.DetailWidth))
 	m.viewport.YPosition = m.context.ViewportYPosition
 	m.isInTextInput = false
 	m.ready = true
@@ -237,9 +237,9 @@ func (m Model) Update(msg tea.Msg) (components.Page, tea.Cmd) {
 		}
 	}
 	if m.paginator.Page == 0 {
-		m.viewport.SetContent(RenderPullRequestDetail(m.pullRequest, m.context.ViewportWidth-2))
+		m.viewport.SetContent(components.CenterInViewport(RenderPullRequestDetail(m.pullRequest, m.context.DetailWidth), m.context.ViewportWidth, m.context.DetailWidth))
 	} else {
-		m.viewport.SetContent(m.RenderPullDiff())
+		m.viewport.SetContent(components.CenterInViewport(m.RenderPullDiff(), m.context.ViewportWidth, m.context.DetailWidth))
 	}
 	v, vCmd := m.viewport.Update(msg)
 	m.viewport = v
@@ -323,7 +323,7 @@ func (m Model) RenderPullDiff() string {
 			}
 			body.WriteString("\n--------------------------------------\n")
 		}
-		doc.WriteString(components.RenderBoxWithTitle(header.String(), body.String(), 160))
+		doc.WriteString(components.RenderBoxWithTitle(header.String(), body.String(), m.context.DetailWidth))
 		doc.WriteString("\n")
 	}
 	return doc.String()
