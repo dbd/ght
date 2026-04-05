@@ -108,6 +108,8 @@ func (m Model) Update(msg tea.Msg) (components.Page, tea.Cmd) {
 		if m.filter.Focused() {
 			if key.Matches(msg, m.context.KeyMap.Exit) {
 				m.filter.Blur()
+				m.filter.SetValue("")
+				m.table.SetRows(m.allRows)
 				break
 			}
 			filter, cmd := m.filter.Update(msg)
@@ -115,14 +117,9 @@ func (m Model) Update(msg tea.Msg) (components.Page, tea.Cmd) {
 			m.filter = filter
 			if key.Matches(msg, m.context.KeyMap.Enter) {
 				m.filter.Blur()
-				newQuery := m.filter.Value()
-				if newQuery != "" {
-					m.query = newQuery
-					m.context.StatusText = fetchingStatus
-					cmds = append(cmds, api.GetPullRequestsCmd(m.query))
-				}
 				break
 			}
+			m.table.SetRows(m.filteredRows())
 			break
 		}
 		switch {
@@ -130,7 +127,7 @@ func (m Model) Update(msg tea.Msg) (components.Page, tea.Cmd) {
 			cmds = append(cmds, m.openPR(m.table.SelectedRow()))
 		case key.Matches(msg, m.context.KeyMap.Filter):
 			m.filter.Focus()
-			m.filter.Placeholder = "Enter GitHub search query..."
+			m.filter.Placeholder = "Filter..."
 		case key.Matches(msg, m.context.KeyMap.Up):
 			if m.table.Cursor() == 0 {
 				cmds = append(cmds, m.Blur)
@@ -288,8 +285,9 @@ func formatCIState(pr api.PullRequestResponse) string {
 func (m Model) filteredRows() []table.Row {
 	var rows []table.Row
 	if m.filter.Value() != "" {
+		val := strings.ToLower(m.filter.Value())
 		for _, row := range m.allRows {
-			if strings.Contains(fmt.Sprintf("%v", row), m.filter.Value()) {
+			if strings.Contains(strings.ToLower(fmt.Sprintf("%v", row)), val) {
 				rows = append(rows, row)
 			}
 		}

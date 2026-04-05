@@ -117,6 +117,8 @@ func (m Model) Update(msg tea.Msg) (components.Page, tea.Cmd) {
 		if m.filter.Focused() {
 			if key.Matches(msg, m.context.KeyMap.Exit) {
 				m.filter.Blur()
+				m.filter.SetValue("")
+				m.table.SetRows(m.allRows)
 				break
 			}
 			filter, cmd := m.filter.Update(msg)
@@ -124,14 +126,9 @@ func (m Model) Update(msg tea.Msg) (components.Page, tea.Cmd) {
 			m.filter = filter
 			if key.Matches(msg, m.context.KeyMap.Enter) {
 				m.filter.Blur()
-				newQuery := m.filter.Value()
-				if newQuery != "" {
-					m.query = newQuery
-					m.context.StatusText = fetchingStatus
-					cmds = append(cmds, api.GetIssuesCmd(m.query))
-				}
 				break
 			}
+			m.table.SetRows(m.filteredRows())
 			break
 		}
 		switch {
@@ -139,7 +136,7 @@ func (m Model) Update(msg tea.Msg) (components.Page, tea.Cmd) {
 			cmds = append(cmds, m.openIssue(m.table.SelectedRow()))
 		case key.Matches(msg, m.context.KeyMap.Filter):
 			m.filter.Focus()
-			m.filter.Placeholder = "Enter GitHub search query..."
+			m.filter.Placeholder = "Filter..."
 		case key.Matches(msg, m.context.KeyMap.Up):
 			if m.table.Cursor() == 0 {
 				cmds = append(cmds, m.Blur)
@@ -254,6 +251,20 @@ func (m Model) openIssue(row table.Row) tea.Cmd {
 
 func (m *Model) GetQuery() string {
 	return m.query
+}
+
+func (m Model) filteredRows() []table.Row {
+	if m.filter.Value() == "" {
+		return m.allRows
+	}
+	val := strings.ToLower(m.filter.Value())
+	var rows []table.Row
+	for _, row := range m.allRows {
+		if strings.Contains(strings.ToLower(fmt.Sprintf("%v", row)), val) {
+			rows = append(rows, row)
+		}
+	}
+	return rows
 }
 
 func formatLabels(issue api.IssueResponse) string {
