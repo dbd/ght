@@ -62,6 +62,7 @@ func getColumns(maxWidth int) []table.Column {
 		{Title: "Number", Width: 8},
 		{Title: "Author", Width: 20},
 		{Title: "Approved", Width: 10},
+		{Title: "CI", Width: 10},
 	}
 	for _, c := range columns {
 		maxWidth -= c.Width
@@ -98,7 +99,7 @@ func (m Model) Update(msg tea.Msg) (components.Page, tea.Cmd) {
 			m.pullRequests = msg.PullRequests
 			var rows []table.Row
 			for _, pr := range m.pullRequests {
-				rows = append(rows, table.Row{pr.CreatedAt.ShortSince(), pr.Repository.Name, strconv.FormatInt(pr.Number, 10), pr.Author.Login, "false", pr.Title})
+				rows = append(rows, table.Row{pr.CreatedAt.ShortSince(), pr.Repository.Name, strconv.FormatInt(pr.Number, 10), pr.Author.Login, "false", formatCIState(pr), pr.Title})
 			}
 			m.table.SetRows(rows)
 			m.allRows = rows
@@ -148,10 +149,44 @@ func (m Model) Update(msg tea.Msg) (components.Page, tea.Cmd) {
 	return &m, tea.Batch(cmds...)
 }
 
+// ciColStart is the character offset of the CI column in a rendered table row.
+// It is the sum of all preceding column widths: Age(10)+Repo(10)+Number(8)+Author(20)+Approved(10).
+const ciColStart = 58
+const ciColWidth = 10
+
+func colorizeTableCI(tableView string) string {
+	lines := strings.Split(tableView, "\n")
+	for i, line := range lines {
+		// Lines with ANSI codes are the header or the selected row — skip them.
+		if strings.ContainsRune(line, '\x1b') || len(line) < ciColStart+ciColWidth {
+			continue
+		}
+		cell := line[ciColStart : ciColStart+ciColWidth]
+		value := strings.TrimRight(cell, " ")
+		if !ciAllPassing(value) {
+			continue
+		}
+		colored := lipgloss.NewStyle().Foreground(components.Green).Render(value)
+		padding := strings.Repeat(" ", ciColWidth-len(value))
+		lines[i] = line[:ciColStart] + colored + padding + line[ciColStart+ciColWidth:]
+	}
+	return strings.Join(lines, "\n")
+}
+
+func ciAllPassing(s string) bool {
+	idx := strings.IndexByte(s, '|')
+	if idx < 1 {
+		return false
+	}
+	a, err1 := strconv.Atoi(s[:idx])
+	b, err2 := strconv.Atoi(s[idx+1:])
+	return err1 == nil && err2 == nil && a > 0 && a == b
+}
+
 func (m Model) View() string {
 	doc := strings.Builder{}
 	doc.WriteString(components.BoxBorderStyle.Width(m.context.ViewportWidth-2).Align(lipgloss.Left).Render(m.query) + "\n")
-	doc.WriteString(m.table.View())
+	doc.WriteString(colorizeTableCI(m.table.View()))
 	body := doc.String()
 	if m.showHelp {
 		width, height, _ := term.GetSize(int(os.Stdout.Fd()))
@@ -210,6 +245,40 @@ func (m Model) openPR(row table.Row) tea.Cmd {
 
 func (m *Model) GetQuery() string {
 	return m.query
+}
+
+func formatCIState(pr api.PullRequestResponse) string {
+	state := pr.CIState()
+	if state == "" {
+		return "-"
+	}
+	checks := pr.CIChecks()
+	if len(checks) == 0 {
+		switch state {
+		case "SUCCESS":
+			return "pass"
+		case "FAILURE":
+			return "fail"
+		case "PENDING":
+			return "running"
+		default:
+			return "-"
+		}
+	}
+	passing := 0
+	for _, c := range checks {
+		switch c.Type {
+		case "CheckRun":
+			if c.CheckRun.Conclusion == "SUCCESS" {
+				passing++
+			}
+		case "StatusContext":
+			if c.StatusContext.State == "SUCCESS" {
+				passing++
+			}
+		}
+	}
+	return fmt.Sprintf("%d|%d", passing, len(checks))
 }
 
 func (m Model) filteredRows() []table.Row {

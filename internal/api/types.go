@@ -28,13 +28,22 @@ type PullRequestResponse struct {
 	Mergeable          string
 	BaseRefName        string
 	HeadRefName        string
-	Comments           IssueComments      `graphql:"comments(last: 20, orderBy: { field: UPDATED_AT, direction: DESC })"`
-	PullRequestCommits PullRequestCommits `graphql:"commits(first: 10)"`
-	ReviewThreads      ReviewThreads      `graphql:"reviewThreads(first: 10)"`
-	Labels             Labels             `graphql:"labels(first: 10)"`
-	Reviews            Reviews            `graphql:"reviews(first: 10)"`
-	ReviewRequests     ReviewRequests     `graphql:"reviewRequests(first: 10)"`
-	TimelineItems      TimelineItems      `graphql:"timelineItems(first: 30)"`
+	Comments           IssueComments          `graphql:"comments(last: 20, orderBy: { field: UPDATED_AT, direction: DESC })"`
+	PullRequestCommits PullRequestCommits     `graphql:"commits(first: 10)"`
+	HeadRef            HeadRef
+	ReviewThreads      ReviewThreads          `graphql:"reviewThreads(first: 10)"`
+	Labels             Labels                 `graphql:"labels(first: 10)"`
+	Reviews            Reviews                `graphql:"reviews(first: 10)"`
+	ReviewRequests     ReviewRequests         `graphql:"reviewRequests(first: 10)"`
+	TimelineItems      TimelineItems          `graphql:"timelineItems(first: 30)"`
+}
+
+func (pr PullRequestResponse) CIState() string {
+	return pr.HeadRef.Target.Commit.StatusCheckRollup.State
+}
+
+func (pr PullRequestResponse) CIChecks() []StatusCheckRollupContext {
+	return pr.HeadRef.Target.Commit.StatusCheckRollup.Contexts.Nodes
 }
 
 type Repository struct {
@@ -259,6 +268,45 @@ type Commit struct {
 	Deletions      int64
 	Message        string
 	AuthoredDate   Timestamp
+}
+
+type HeadRef struct {
+	Target HeadRefTarget
+}
+
+type HeadRefTarget struct {
+	Type   string     `graphql:"__typename"`
+	Commit HeadCommit `graphql:"... on Commit"`
+}
+
+type HeadCommit struct {
+	StatusCheckRollup StatusCheckRollup
+}
+
+type StatusCheckRollup struct {
+	State    string
+	Contexts StatusCheckRollupContextConnection `graphql:"contexts(first: 20)"`
+}
+
+type StatusCheckRollupContextConnection struct {
+	Nodes []StatusCheckRollupContext
+}
+
+type StatusCheckRollupContext struct {
+	Type          string        `graphql:"__typename"`
+	CheckRun      CheckRun      `graphql:"... on CheckRun"`
+	StatusContext StatusContext `graphql:"... on StatusContext"`
+}
+
+type CheckRun struct {
+	Name       string
+	Status     string
+	Conclusion string
+}
+
+type StatusContext struct {
+	Context string
+	State   string
 }
 
 type ReviewThreads struct {
