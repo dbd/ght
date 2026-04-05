@@ -80,5 +80,12 @@ func SaveSearch(name string, query string) error {
 func writeConfig(config Config) error {
 	viper.Set("pr.searches", config.Pr.Searches)
 	configPath := os.ExpandEnv("$HOME/.config/ght/config.yaml")
+	
+	// Create directory if it doesn't exist
+	configDir := os.ExpandEnv("$HOME/.config/ght")
+	if err := os.MkdirAll(configDir, 0755); err != nil {
+		return err
+	}
+	
 	return viper.WriteConfigAs(configPath)
 }

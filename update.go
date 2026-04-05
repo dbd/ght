@@ -15,6 +15,21 @@ import (
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
+
+	// Handle setup dialog if needed
+	if m.needsSetup {
+		switch msg := msg.(type) {
+		case components.ConfigCreated:
+			// Reload with new config
+			return initializeModel(), tea.ClearScreen
+		case tea.KeyMsg:
+			sd, sdCmd := m.setupDialog.Update(msg)
+			m.setupDialog = sd.(*components.SetupDialogModel)
+			return m, sdCmd
+		}
+		return m, nil
+	}
+
 	activeTab := m.Tabs[m.activeTab]
 	switch msg := msg.(type) {
 	case components.CmdQuit:

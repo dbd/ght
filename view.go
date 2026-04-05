@@ -59,6 +59,13 @@ func (m Model) footerView() string {
 	return doc.String()
 }
 func (m Model) View() string {
+	// If we need setup, show the setup dialog
+	if m.needsSetup {
+		width, height, _ := term.GetSize(int(os.Stdout.Fd()))
+		background := strings.Repeat(strings.Repeat(" ", width)+"\n", height)
+		return components.RenderCenteredOverlay(m.setupDialog.View(), background, width/2, height/2)
+	}
+
 	var body string
 	m.viewport.SetContent(m.Tabs[m.activeTab].View())
 	body = m.viewport.View()

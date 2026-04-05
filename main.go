@@ -18,16 +18,18 @@ import (
 )
 
 type Model struct {
-	Tabs       []tab.Model
-	activeTab  int
-	config     components.Config
-	viewport   viewport.Model
-	ready      bool
-	context    *components.Context
-	command    textinput.Model
-	focused    bool
-	showHelp   bool
-	helpDialog components.HelpDialogModel
+	Tabs        []tab.Model
+	activeTab   int
+	config      components.Config
+	viewport    viewport.Model
+	ready       bool
+	context     *components.Context
+	command     textinput.Model
+	focused     bool
+	showHelp    bool
+	helpDialog  components.HelpDialogModel
+	setupDialog *components.SetupDialogModel
+	needsSetup  bool
 }
 
 var fullHelp = [][]key.Binding{
@@ -47,6 +49,14 @@ func initializeModel() Model {
 		showHelp: false,
 		command:  textinput.New(),
 	}
+
+	// Check if we need to run setup
+	if len(config.Pr.Searches) == 0 {
+		m.needsSetup = true
+		m.setupDialog = components.NewSetupDialogModel(&ctx)
+		return m
+	}
+
 	headerHeight := lipgloss.Height(m.headerView())
 	footerHeight := lipgloss.Height(m.footerView())
 	verticalMarginHeight := headerHeight + footerHeight
