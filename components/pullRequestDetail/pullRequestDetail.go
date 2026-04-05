@@ -236,6 +236,8 @@ func (m Model) Update(msg tea.Msg) (components.Page, tea.Cmd) {
 			m.isInTextInput = true
 		case key.Matches(msg, openBrowser):
 			m.context.StatusText = m.pullRequest.Url
+			utils.OpenURL(m.pullRequest.Url)
+			cmds = append(cmds, api.OpenPRInBrowserCmd(m.pullRequest))
 		case key.Matches(msg, components.DefaultKeyMap.Up):
 			if m.viewport.AtTop() {
 				cmds = append(cmds, m.Blur)

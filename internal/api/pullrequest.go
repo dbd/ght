@@ -230,3 +230,10 @@ func AddReviewerCmd(pr PullRequestResponse, username string) tea.Cmd {
 		return ReviewerResult{Success: true, Error: nil, PR: pr}
 	}
 }
+
+func OpenPRInBrowserCmd(pr PullRequestResponse) tea.Cmd {
+	return func() tea.Msg {
+		gh.Exec("pr", "view", "--web", "--repo", pr.Repository.NameWithOwner, pr.HeadRefName)
+		return nil
+	}
+}

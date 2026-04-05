@@ -84,62 +84,73 @@ go build
    ./ght
    ```
 
+   If no config exists, ght will prompt you to create one on first launch.
+
 ## Usage
 
 ### Modes
 
-ght has two modes: **PR mode** and **Issue mode**. Switch between them with commands:
+ght has two modes: **PR mode** and **Issue mode**.
 
-| Command | Description |
-|---------|-------------|
-| `:prs` | Switch to PR mode |
-| `:issues` | Switch to Issue mode |
+| Key / Command | Description |
+|---------------|-------------|
+| `P` | Switch to PR mode |
+| `I` | Switch to Issue mode |
+| `:prs` | Switch to PR mode (command) |
+| `:issues` | Switch to Issue mode (command) |
 
 ### Navigation
 
 | Key | Action |
 |-----|--------|
-| `j`/`k` or `↑`/`↓` | Move up/down |
+| `j`/`k` or `↑`/`↓` | Move up/down in list or scroll detail |
 | `h`/`l` or `←`/`→` | Switch tabs left/right |
 | `Enter` | Open selected item |
 | `q` or `Ctrl+W` | Close current tab |
-| `Esc` or `Ctrl+C` | Exit application / Cancel dialog |
+| `Esc` or `Ctrl+C` | Exit application |
 | `?` | Toggle help |
 | `Ctrl+Z` | Suspend to shell |
+
+When viewing a PR or issue detail, pressing `↑` at the top of the viewport returns focus to the tab bar.
 
 ### Search & Filter
 
 | Key | Action |
 |-----|--------|
-| `/` | Enter search/filter mode |
-| `Enter` | Execute search (in search mode) |
-| `Esc` | Cancel search |
+| `/` | Filter currently loaded results by text |
+| `Enter` | Confirm filter |
+| `Esc` | Clear filter |
 
-### PR Actions
+In a **New Search** tab (created via `:newtab` or `:new-issue-tab`), `/` opens a query input that runs a GitHub search.
+
+### PR Actions (detail view)
 
 | Key | Action |
 |-----|--------|
-| `c` | Show/hide comments |
+| `c` | Show/hide inline comments |
 | `C` | Add comment |
 | `a` | Approve PR |
 | `x` | Request changes |
 | `r` | Add reviewer |
 | `A` | Add assignee |
 | `m` | Open merge dialog |
+| `o` | Open PR in browser (URL shown in status bar) |
 
-### Issue Actions
+The PR detail view has two pages (navigate with `PgDn`/`PgUp`): the PR summary and the diff.
+
+### Issue Actions (detail view)
 
 | Key | Action |
 |-----|--------|
 | `c` | Add comment |
 | `A` | Add assignee |
 | `x` | Close / reopen issue |
-| `o` | Open issue in browser |
+| `o` | Open issue in browser (URL shown in status bar) |
 | `M` | Open milestone (if issue has one) |
 
 ### Command Mode
 
-Press `:` to enter command mode. Available commands:
+Press `:` to enter command mode. Commands support prefix matching — `:n` works for `:newtab`, `:ref` for `:refresh`, etc.
 
 | Command | Description |
 |---------|-------------|
@@ -148,7 +159,7 @@ Press `:` to enter command mode. Available commands:
 | `:newtab` | Create a new PR search tab |
 | `:new-issue-tab` | Create a new issue search tab |
 | `:milestones <owner/repo>` | Open milestone list for a repo |
-| `:save-tab <name>` | Save current search to config |
+| `:save-tab <name>` | Save current tab to config (PR search, issue search, or milestone list) |
 | `:refresh` | Refresh current tab |
 | `:merge` | Open merge dialog |
 | `:add-assignee <username>` | Add assignee to PR |
@@ -224,10 +235,10 @@ Use GitHub's advanced search syntax for powerful queries:
 
 ### Issue Triage
 
-1. Switch to issue mode with `:issues`
+1. Switch to issue mode with `I` or `:issues`
 2. Browse issues with `j`/`k`, press `Enter` to open
 3. Press `x` to close/reopen, `A` to add an assignee, `c` to comment
-4. Press `M` to jump to the issue's milestone
+4. Press `o` to open the issue in a browser (URL also shown in status bar), `M` to jump to its milestone
 
 ### Milestone Tracking
 
@@ -326,7 +337,7 @@ See [AGENTS.md](AGENTS.md) for detailed development documentation.
 
 ### Quick Access
 
-In any list, press `/` and type to filter by title, number, or other fields.
+In any search list, press `/` and type to filter loaded results by any visible field (title, number, author, etc.).
 
 ### Terminal Multiplexer Integration
 

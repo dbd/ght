@@ -11,6 +11,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/dbd/ght/components"
 	"github.com/dbd/ght/internal/api"
+	"github.com/dbd/ght/utils"
 	"golang.org/x/term"
 )
 
@@ -164,6 +165,8 @@ func (m Model) Update(msg tea.Msg) (components.Page, tea.Cmd) {
 			}
 		case key.Matches(msg, openBrowser):
 			m.context.StatusText = m.issue.Url
+			utils.OpenURL(m.issue.Url)
+			cmds = append(cmds, api.OpenIssueInBrowserCmd(m.issue))
 		case key.Matches(msg, components.DefaultKeyMap.Up):
 			if m.viewport.AtTop() {
 				cmds = append(cmds, m.Blur)
