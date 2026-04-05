@@ -64,6 +64,10 @@ var (
 		key.WithKeys("A"),
 		key.WithHelp("A", "add assignee"))
 
+	openBrowser = key.NewBinding(
+		key.WithKeys("o"),
+		key.WithHelp("o", "open in browser"))
+
 	fullHelp = [][]key.Binding{{}, {}}
 )
 
@@ -95,7 +99,7 @@ func NewModel(pr api.PullRequestResponse, ctx *components.Context) *Model {
 		log.Fatal(err)
 	}
 	m.diff = diff.String()
-	fullHelp = [][]key.Binding{{components.DefaultKeyMap.Up, components.DefaultKeyMap.Down, showComments, openMerge}, {openComment, openApprove, openRequestChanges}, {openAddReviewer, openAddAssignee}, {m.viewport.KeyMap.PageDown, m.viewport.KeyMap.PageUp, m.viewport.KeyMap.HalfPageUp, m.viewport.KeyMap.HalfPageDown}}
+	fullHelp = [][]key.Binding{{components.DefaultKeyMap.Up, components.DefaultKeyMap.Down, showComments, openMerge}, {openComment, openApprove, openRequestChanges}, {openAddReviewer, openAddAssignee, openBrowser}, {m.viewport.KeyMap.PageDown, m.viewport.KeyMap.PageUp, m.viewport.KeyMap.HalfPageUp, m.viewport.KeyMap.HalfPageDown}}
 	m.mergeDialog = *components.NewMergeDialogModel(ctx, pr)
 	m.reviewDialog = *components.NewReviewDialogModel(ctx, pr)
 	m.inputDialog = *components.NewInputDialogModel(ctx, pr)
@@ -230,6 +234,8 @@ func (m Model) Update(msg tea.Msg) (components.Page, tea.Cmd) {
 		case key.Matches(msg, openAddAssignee):
 			m.inputDialog.FocusWithType(components.InputDialogAssignee)
 			m.isInTextInput = true
+		case key.Matches(msg, openBrowser):
+			m.context.StatusText = m.pullRequest.Url
 		case key.Matches(msg, components.DefaultKeyMap.Up):
 			if m.viewport.AtTop() {
 				cmds = append(cmds, m.Blur)

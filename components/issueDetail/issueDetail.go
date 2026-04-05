@@ -163,7 +163,7 @@ func (m Model) Update(msg tea.Msg) (components.Page, tea.Cmd) {
 				cmds = append(cmds, api.ReopenIssueCmd(m.issue))
 			}
 		case key.Matches(msg, openBrowser):
-			cmds = append(cmds, api.OpenIssueInBrowserCmd(m.issue))
+			m.context.StatusText = m.issue.Url
 		case key.Matches(msg, components.DefaultKeyMap.Up):
 			if m.viewport.AtTop() {
 				cmds = append(cmds, m.Blur)

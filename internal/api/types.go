@@ -18,6 +18,7 @@ type PullRequestResponse struct {
 	Author             Actor
 	Title              string
 	Body               string
+	Url                string
 	CreatedAt          Timestamp
 	Repository         Repository
 	Number             int64
@@ -430,6 +431,7 @@ type IssueResponse struct {
 	Number        int64
 	Title         string
 	Body          string
+	Url           string
 	State         string
 	Author        Actor
 	CreatedAt     Timestamp

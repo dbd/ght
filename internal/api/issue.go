@@ -136,13 +136,6 @@ func ReopenIssueCmd(issue IssueResponse) tea.Cmd {
 	}
 }
 
-func OpenIssueInBrowserCmd(issue IssueResponse) tea.Cmd {
-	return func() tea.Msg {
-		gh.Exec("issue", "view", "--web", "--repo", issue.Repository.NameWithOwner, issueNumber(issue))
-		return nil
-	}
-}
-
 func issueNumber(issue IssueResponse) string {
 	var s string
 	n := issue.Number

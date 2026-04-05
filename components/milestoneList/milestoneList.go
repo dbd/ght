@@ -24,9 +24,13 @@ type Model struct {
 	focused    bool
 }
 
+var openMilestone = key.NewBinding(
+	key.WithKeys("M"),
+	key.WithHelp("M", "open milestone"))
+
 var (
 	fullHelp = [][]key.Binding{
-		{components.DefaultKeyMap.Up, components.DefaultKeyMap.Down, components.DefaultKeyMap.Enter},
+		{components.DefaultKeyMap.Up, components.DefaultKeyMap.Down, components.DefaultKeyMap.Enter, openMilestone},
 		{components.DefaultKeyMap.Close, components.DefaultKeyMap.Exit},
 	}
 	fetchingStatus = "Fetching milestones..."
@@ -105,7 +109,7 @@ func (m Model) Update(msg tea.Msg) (components.Page, tea.Cmd) {
 		}
 	case tea.KeyMsg:
 		switch {
-		case key.Matches(msg, m.context.KeyMap.Enter):
+		case key.Matches(msg, m.context.KeyMap.Enter), key.Matches(msg, openMilestone):
 			cmds = append(cmds, m.openMilestone(m.table.SelectedRow()))
 		case key.Matches(msg, m.context.KeyMap.Up):
 			if m.table.Cursor() == 0 {
